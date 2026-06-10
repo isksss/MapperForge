@@ -60,4 +60,28 @@ final class ConfigLoaderTest {
 
     assertEquals("formatterVersion must be SemVer: latest", error.getMessage());
   }
+
+  @Test
+  void normalizesLineEndingAliases() {
+    FormatterConfig crlf =
+        new FormatterConfig(
+            FormatterConfig.defaults().dialect(),
+            FormatterConfig.defaults().formatterVersion(),
+            FormatterConfig.defaults().include(),
+            FormatterConfig.defaults().exclude(),
+            FormatterConfig.defaults().indentSize(),
+            FormatterConfig.defaults().maxLineLength(),
+            "CRLF",
+            FormatterConfig.defaults().sqlFormatStyle(),
+            FormatterConfig.defaults().sqlPrinter(),
+            FormatterConfig.defaults().tagWrapStyle(),
+            FormatterConfig.defaults().attributeLayout(),
+            FormatterConfig.defaults().preserveWhitespace(),
+            FormatterConfig.defaults().preserveCdata(),
+            FormatterConfig.defaults().formatSqlInsideCdata(),
+            FormatterConfig.defaults().strict(),
+            FormatterConfig.defaults().attributeOrder());
+
+    assertEquals("\r\n", crlf.lineEnding());
+  }
 }

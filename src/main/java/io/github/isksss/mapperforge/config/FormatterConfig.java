@@ -24,6 +24,7 @@ public record FormatterConfig(
     if (!isSemVer(formatterVersion)) {
       throw new IllegalArgumentException("formatterVersion must be SemVer: " + formatterVersion);
     }
+    lineEnding = normalizeLineEnding(lineEnding);
   }
 
   public static FormatterConfig defaults() {
@@ -54,5 +55,13 @@ public record FormatterConfig(
         "(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)"
             + "(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?"
             + "(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?");
+  }
+
+  private static String normalizeLineEnding(String value) {
+    return switch (value) {
+      case "LF", "\\n" -> "\n";
+      case "CRLF", "\\r\\n" -> "\r\n";
+      default -> value;
+    };
   }
 }
