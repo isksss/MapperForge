@@ -59,7 +59,7 @@
 | `GenericElement` fallback | `GenericElementNode`, `MapperXmlParserTest`, `ValidatorTest` |
 | `TextNode`, `CommentNode`, `CDataNode` | `ast/mapper`, `MapperAstLeafNodeTest`, golden files, `ValidatorTest` |
 | Placeholder parser | `PlaceholderParser`, `PlaceholderExpression`, `PlaceholderParserTest` |
-| Source position records | `SourceFile`, `Position`, `Range`, `Token`, `SourceModelTest` |
+| Source position and token records | `SourceFile`, `Position`, `Range`, `Token`, `TokenType`, `SourceModelTest`, `SqlTokenizerTest`, `docs/ja/adr/0094-token-type-public-contract.md` |
 
 ## SQL
 

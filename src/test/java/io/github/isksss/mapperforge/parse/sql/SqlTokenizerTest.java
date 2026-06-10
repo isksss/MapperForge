@@ -3,10 +3,27 @@ package io.github.isksss.mapperforge.parse.sql;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.github.isksss.mapperforge.token.TokenType;
+import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
 final class SqlTokenizerTest {
+  @Test
+  void tokenTypesKeepPublicContractOrder() {
+    assertEquals(
+        List.of(
+            "IDENTIFIER",
+            "KEYWORD",
+            "STRING",
+            "NUMBER",
+            "SYMBOL",
+            "PLACEHOLDER",
+            "COMMENT",
+            "EOF",
+            "UNKNOWN"),
+        Arrays.stream(TokenType.values()).map(Enum::name).toList());
+  }
+
   @Test
   void tokenizesKeywordsPlaceholdersAndRanges() {
     List<String> tokens =
