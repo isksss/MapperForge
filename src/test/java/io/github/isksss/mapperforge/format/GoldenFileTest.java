@@ -7,42 +7,33 @@ import io.github.isksss.mapperforge.MapperForge;
 import io.github.isksss.mapperforge.config.FormatterConfig;
 import io.github.isksss.mapperforge.source.SourceFile;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestFactory;
 
 final class GoldenFileTest {
+  private static final Set<String> CUSTOM_CONFIG_GOLDEN_FILES = Set.of("attribute-order");
   private final MapperForge mapperForge = new MapperForge();
 
-  @Test
-  void formatsDynamicSql() throws IOException {
-    assertGolden("dynamic-sql", FormatterConfig.defaults());
-  }
-
-  @Test
-  void formatsSimpleSelect() throws IOException {
-    assertGolden("simple-select", FormatterConfig.defaults());
-  }
-
-  @Test
-  void formatsInsertUpdateDelete() throws IOException {
-    assertGolden("insert-update-delete", FormatterConfig.defaults());
-  }
-
-  @Test
-  void formatsForeachAndChoose() throws IOException {
-    assertGolden("foreach-choose", FormatterConfig.defaults());
-  }
-
-  @Test
-  void formatsComplexSql() throws IOException {
-    assertGolden("complex-sql", FormatterConfig.defaults());
-  }
-
-  @Test
-  void preservesCdataEscapedOperators() throws IOException {
-    assertGolden("cdata-escaped-operators", FormatterConfig.defaults());
+  @TestFactory
+  Stream<DynamicTest> defaultGoldenFiles() throws IOException, URISyntaxException {
+    Path goldenRoot = Path.of(getClass().getClassLoader().getResource("golden").toURI());
+    return Files.list(goldenRoot)
+        .filter(Files::isDirectory)
+        .filter(path -> !CUSTOM_CONFIG_GOLDEN_FILES.contains(path.getFileName().toString()))
+        .map(
+            path ->
+                DynamicTest.dynamicTest(
+                    path.getFileName().toString(),
+                    () -> assertGolden(path.getFileName().toString(), FormatterConfig.defaults())));
   }
 
   @Test
