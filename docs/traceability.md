@@ -71,7 +71,7 @@ This document maps the main `PLAN.local.md` requirements to implementation and v
 | `SELECT`, DML, `WITH`, set operations | `SqlStatementParserTest`, golden files |
 | SQL expression variants | `ast/sql/*`, `SqlExpressionParserTest` |
 | Unknown recovery | `UnknownStatement`, `UnknownExpression`, parser tests |
-| SQL formatter styles | `SqlFormatter`, `SqlFormatterTest`, golden files |
+| SQL formatter styles | `SqlFormatter`, `SqlFormatterTest`, golden files, `docs/adr/0098-sql-formatter-public-contract.md` |
 | AST SQL printer | `SqlAstPrinter`, `SqlAstPrinterTest`, golden files |
 | Document model and layout engine | `Doc`, `Docs`, `LayoutEngine`, `DocTreeTest`, `LayoutEngineTest` |
 

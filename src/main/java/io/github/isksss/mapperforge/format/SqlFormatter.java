@@ -11,6 +11,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
+/**
+ * Mapper XML 内の SQL text を整形する formatter です。
+ *
+ * <p>設定に応じて AST printer または legacy regex formatter を使います。AST printer が未対応 SQL を返した場合は、legacy
+ * formatter に fallback します。
+ */
 public final class SqlFormatter {
   private static final List<String> CLAUSE_KEYWORDS =
       List.of(
@@ -39,6 +45,16 @@ public final class SqlFormatter {
   private static final List<String> INLINE_KEYWORDS =
       List.of("AND", "OR", "IN", "IS", "NULL", "NOT", "LIKE");
 
+  /** SQL formatter を作成します。 */
+  public SqlFormatter() {}
+
+  /**
+   * SQL text を設定に従って整形します。
+   *
+   * @param sql 整形対象 SQL
+   * @param config formatter 設定
+   * @return 整形後 SQL。空白のみの SQL は空文字
+   */
   public String format(String sql, FormatterConfig config) {
     String compact = compactSql(sql);
     if (compact.isBlank()) {
@@ -57,6 +73,13 @@ public final class SqlFormatter {
     return formatWithRegex(upper, config);
   }
 
+  /**
+   * legacy regex formatter だけで SQL text を整形します。
+   *
+   * @param sql 整形対象 SQL
+   * @param config formatter 設定
+   * @return 整形後 SQL。空白のみの SQL は空文字
+   */
   public String formatLegacy(String sql, FormatterConfig config) {
     String compact = compactSql(sql);
     if (compact.isBlank()) {

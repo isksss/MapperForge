@@ -45,6 +45,35 @@ final class SqlFormatterTest {
   }
 
   @Test
+  void blankSqlFormatsToEmptyString() {
+    assertEquals("", formatter.format(" \n\t ", config(SqlFormatStyle.MULTI_LINE, SqlPrinter.AST)));
+    assertEquals(
+        "", formatter.formatLegacy(" \n\t ", config(SqlFormatStyle.MULTI_LINE, SqlPrinter.AST)));
+  }
+
+  @Test
+  void astPrinterFallsBackToLegacyFormatterForUnsupportedSql() {
+    assertEquals(
+        """
+        merge into users using source
+        ON users.id = source.id""",
+        formatter.format(
+            "merge into users using source on users.id = source.id",
+            config(SqlFormatStyle.MULTI_LINE, SqlPrinter.AST)));
+  }
+
+  @Test
+  void formatLegacyDoesNotUseAstPrinter() {
+    assertEquals(
+        """
+        SELECT
+            id
+        FROM users""",
+        formatter.formatLegacy(
+            "select id from users", config(SqlFormatStyle.MULTI_LINE, SqlPrinter.AST)));
+  }
+
+  @Test
   void preservesSqlCommentsWithoutFormattingTheirContent() {
     String sql =
         """

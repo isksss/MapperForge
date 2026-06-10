@@ -71,7 +71,7 @@
 | `SELECT`, DML, `WITH`, set operations | `SqlStatementParserTest`, golden files |
 | SQL expression variants | `ast/sql/*`, `SqlExpressionParserTest` |
 | Unknown recovery | `UnknownStatement`, `UnknownExpression`, parser tests |
-| SQL formatter styles | `SqlFormatter`, `SqlFormatterTest`, golden files |
+| SQL formatter styles | `SqlFormatter`, `SqlFormatterTest`, golden files, `docs/ja/adr/0098-sql-formatter-public-contract.md` |
 | AST SQL printer | `SqlAstPrinter`, `SqlAstPrinterTest`, golden files |
 | Document model and layout engine | `Doc`, `Docs`, `LayoutEngine`, `DocTreeTest`, `LayoutEngineTest` |
 
