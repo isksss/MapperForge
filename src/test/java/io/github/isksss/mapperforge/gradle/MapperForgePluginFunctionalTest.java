@@ -195,6 +195,8 @@ final class MapperForgePluginFunctionalTest {
             .buildAndFail();
 
     assertTrue(result.getOutput().contains("MapperForge validation failed"));
+    assertTrue(result.getOutput().contains("VALIDATION_ERROR"));
+    assertTrue(result.getOutput().contains("CDATA"));
     assertEquals(original, Files.readString(mapper, StandardCharsets.UTF_8));
   }
 
@@ -222,6 +224,8 @@ final class MapperForgePluginFunctionalTest {
 
     assertEquals(TaskOutcome.SUCCESS, result.task(":mapperForgeFormat").getOutcome());
     assertTrue(result.getOutput().contains("MapperForge validation failed"));
+    assertTrue(result.getOutput().contains("VALIDATION_ERROR"));
+    assertTrue(result.getOutput().contains("CDATA"));
     assertEquals(original, Files.readString(mapper, StandardCharsets.UTF_8));
   }
 

@@ -34,6 +34,7 @@ import io.github.isksss.mapperforge.ast.mapper.TrimElementNode;
 import io.github.isksss.mapperforge.ast.mapper.UpdateElementNode;
 import io.github.isksss.mapperforge.ast.mapper.WhenElementNode;
 import io.github.isksss.mapperforge.ast.mapper.WhereElementNode;
+import io.github.isksss.mapperforge.logging.MapperForgeLoggers;
 import io.github.isksss.mapperforge.parse.sql.SqlStatementParser;
 import io.github.isksss.mapperforge.source.SourceFile;
 import java.io.StringReader;
@@ -64,6 +65,7 @@ public final class MapperXmlParser {
           "set");
 
   public Optional<MapperElementNode> parseMapper(SourceFile source) {
+    MapperForgeLoggers.PARSER.debug("Parsing mapper XML: {}", source.fileName());
     ElementNode root = parse(source);
     if (!(root instanceof MapperElementNode mapper)) {
       return Optional.empty();
@@ -72,6 +74,7 @@ public final class MapperXmlParser {
   }
 
   public ElementNode parse(SourceFile source) {
+    MapperForgeLoggers.PARSER.debug("Parsing XML source: {}", source.fileName());
     XMLInputFactory factory = new WstxInputFactory();
     try {
       XMLStreamReader reader =

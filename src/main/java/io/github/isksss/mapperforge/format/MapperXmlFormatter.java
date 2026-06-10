@@ -4,6 +4,7 @@ import com.ctc.wstx.stax.WstxInputFactory;
 import io.github.isksss.mapperforge.config.AttributeLayout;
 import io.github.isksss.mapperforge.config.FormatterConfig;
 import io.github.isksss.mapperforge.config.TagWrapStyle;
+import io.github.isksss.mapperforge.logging.MapperForgeLoggers;
 import io.github.isksss.mapperforge.source.SourceFile;
 import java.io.StringReader;
 import java.util.ArrayDeque;
@@ -38,6 +39,7 @@ public final class MapperXmlFormatter {
   private final SqlFormatter sqlFormatter = new SqlFormatter();
 
   public String format(SourceFile source, FormatterConfig config) {
+    MapperForgeLoggers.FORMATTER.debug("Formatting mapper XML: {}", source.fileName());
     XMLInputFactory factory = new WstxInputFactory();
     try {
       XMLStreamReader reader =

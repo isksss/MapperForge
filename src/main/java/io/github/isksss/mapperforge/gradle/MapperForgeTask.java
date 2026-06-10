@@ -8,8 +8,10 @@ import io.github.isksss.mapperforge.config.FormatterConfig;
 import io.github.isksss.mapperforge.config.SqlFormatStyle;
 import io.github.isksss.mapperforge.config.SqlPrinter;
 import io.github.isksss.mapperforge.config.TagWrapStyle;
+import io.github.isksss.mapperforge.logging.MapperForgeLoggers;
 import io.github.isksss.mapperforge.parse.MapperXmlParser;
 import io.github.isksss.mapperforge.source.SourceFile;
+import io.github.isksss.mapperforge.validation.ValidationResult;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -147,6 +149,8 @@ public abstract class MapperForgeTask extends DefaultTask {
   @TaskAction
   public void run() {
     FormatterConfig config = config();
+    MapperForgeLoggers.GRADLE.info(
+        "Running MapperForge task: {} mode={}", getName(), getMode().get());
     boolean failed = false;
     for (var file : sourceFiles.getFiles()) {
       if (!file.isFile() || !file.getName().endsWith(".xml") || !isMapperXml(file.toPath())) {
@@ -160,7 +164,7 @@ public abstract class MapperForgeTask extends DefaultTask {
           var validation =
               getMapperForge().validate(source, new SourceFile(file.getName(), after), config);
           if (!validation.success()) {
-            String message = "MapperForge validation failed: " + file;
+            String message = validationFailureMessage(file.toPath(), validation);
             if (config.strict()) {
               throw new GradleException(message);
             }
@@ -233,6 +237,15 @@ public abstract class MapperForgeTask extends DefaultTask {
 
   private String relativePath(Path path) {
     return getProject().getProjectDir().toPath().relativize(path).toString();
+  }
+
+  private String validationFailureMessage(Path file, ValidationResult validation) {
+    String details =
+        validation.errors().stream()
+            .findFirst()
+            .map(error -> error.code() + "/" + error.type() + ": " + error.message())
+            .orElse("UNKNOWN");
+    return "MapperForge validation failed: " + file + " [" + details + "]";
   }
 
   private void writeStateFile(FormatterConfig config) throws IOException {

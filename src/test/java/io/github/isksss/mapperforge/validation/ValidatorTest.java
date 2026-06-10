@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.isksss.mapperforge.config.FormatterConfig;
+import io.github.isksss.mapperforge.error.ErrorCode;
 import io.github.isksss.mapperforge.source.SourceFile;
 import org.junit.jupiter.api.Test;
 
@@ -41,6 +42,7 @@ final class ValidatorTest {
 
     assertFalse(result.success());
     assertEquals(ErrorType.GENERIC_ELEMENT, result.errors().getFirst().type());
+    assertEquals(ErrorCode.VALIDATION_ERROR, result.errors().getFirst().code());
   }
 
   @Test
@@ -54,6 +56,7 @@ final class ValidatorTest {
 
     assertFalse(result.success());
     assertEquals(ErrorType.COMMENT, result.errors().getFirst().type());
+    assertEquals(ErrorCode.VALIDATION_ERROR, result.errors().getFirst().code());
   }
 
   @Test
@@ -69,6 +72,7 @@ final class ValidatorTest {
 
     assertFalse(result.success());
     assertEquals(ErrorType.CDATA, result.errors().getFirst().type());
+    assertEquals(ErrorCode.VALIDATION_ERROR, result.errors().getFirst().code());
   }
 
   @Test
@@ -85,6 +89,7 @@ final class ValidatorTest {
     ValidationResult result = validator.validate(before, after, FormatterConfig.defaults());
 
     assertEquals(ErrorType.PLACEHOLDER, result.errors().getFirst().type());
+    assertEquals(ErrorCode.VALIDATION_ERROR, result.errors().getFirst().code());
   }
 
   @Test
@@ -124,6 +129,7 @@ final class ValidatorTest {
 
     assertFalse(result.success());
     assertEquals(ErrorType.STATEMENT, result.errors().getFirst().type());
+    assertEquals(ErrorCode.VALIDATION_ERROR, result.errors().getFirst().code());
   }
 
   @Test
@@ -163,5 +169,6 @@ final class ValidatorTest {
 
     assertFalse(result.success());
     assertEquals(ErrorType.EXPRESSION, result.errors().getFirst().type());
+    assertEquals(ErrorCode.VALIDATION_ERROR, result.errors().getFirst().code());
   }
 }

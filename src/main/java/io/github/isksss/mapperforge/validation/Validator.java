@@ -27,6 +27,7 @@ import io.github.isksss.mapperforge.ast.sql.UpdateStatement;
 import io.github.isksss.mapperforge.ast.sql.WithStatement;
 import io.github.isksss.mapperforge.config.FormatterConfig;
 import io.github.isksss.mapperforge.format.OgnlFormatter;
+import io.github.isksss.mapperforge.logging.MapperForgeLoggers;
 import io.github.isksss.mapperforge.parse.MapperXmlParser;
 import io.github.isksss.mapperforge.parse.ognl.OgnlExpressionParser;
 import io.github.isksss.mapperforge.parse.sql.PlaceholderParser;
@@ -47,11 +48,17 @@ public final class Validator {
   private final OgnlFormatter ognlFormatter = new OgnlFormatter();
 
   public ValidationResult validate(SourceFile before, SourceFile after, FormatterConfig config) {
+    MapperForgeLoggers.VALIDATOR.debug("Validating formatted mapper XML: {}", before.fileName());
     List<ValidationError> errors = new ArrayList<>();
     compareAst(before, after, errors);
     comparePlaceholders(before.content(), after.content(), errors);
     compareSqlStatements(before, after, errors);
-    return new ValidationResult(errors.isEmpty(), List.copyOf(errors));
+    ValidationResult result = new ValidationResult(errors.isEmpty(), List.copyOf(errors));
+    if (!result.success()) {
+      MapperForgeLoggers.VALIDATOR.warn(
+          "Mapper XML validation failed: {} errors={}", before.fileName(), result.errors().size());
+    }
+    return result;
   }
 
   private void comparePlaceholders(String before, String after, List<ValidationError> errors) {
