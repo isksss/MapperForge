@@ -287,6 +287,37 @@ final class ValidatorTest {
   }
 
   @Test
+  void reportsSqlStatementChangeLocation() {
+    SourceFile before =
+        new SourceFile(
+            "before.xml",
+            """
+            <mapper namespace="sample">
+                <select id="find">
+                    select id from users where active = 1
+                </select>
+            </mapper>
+            """);
+    SourceFile after =
+        new SourceFile(
+            "after.xml",
+            """
+            <mapper namespace="sample">
+                <select id="find">
+                    select id from users where active = 0
+                </select>
+            </mapper>
+            """);
+
+    ValidationResult result = validator.validate(before, after, FormatterConfig.defaults());
+
+    assertFalse(result.success());
+    assertEquals(ErrorType.STATEMENT, result.errors().getFirst().type());
+    assertEquals(3, result.errors().getFirst().location().start().line());
+    assertEquals(9, result.errors().getFirst().location().start().column());
+  }
+
+  @Test
   void acceptsOgnlFormattingOnlyChanges() {
     SourceFile before =
         new SourceFile(

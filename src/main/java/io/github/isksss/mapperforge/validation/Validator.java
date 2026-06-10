@@ -45,6 +45,10 @@ import java.util.regex.Pattern;
 public final class Validator {
   private static final Pattern PLACEHOLDER = Pattern.compile("[$#]\\{[^}]+}");
   private static final Pattern CDATA = Pattern.compile("<!\\[CDATA\\[.*?]]>", Pattern.DOTALL);
+  private static final Pattern SQL_ELEMENT =
+      Pattern.compile(
+          "<(select|insert|update|delete|sql)\\b[^>]*>(.*?)</\\1>",
+          Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
   private static final Pattern TAG_BOUNDARY_WHITESPACE = Pattern.compile(">(\\s+)<");
   private final MapperXmlParser parser = new MapperXmlParser();
   private final PlaceholderParser placeholderParser = new PlaceholderParser();
@@ -114,9 +118,15 @@ public final class Validator {
     List<Object> beforeStatements = sqlStatementSignatures(parser.parse(before));
     List<Object> afterStatements = sqlStatementSignatures(parser.parse(after));
     if (!beforeStatements.equals(afterStatements)) {
+      List<Range> beforeRanges = sqlStatementRanges(before.content());
+      int differingIndex = firstDifferingIndex(beforeStatements, afterStatements);
+      Range location =
+          differingIndex >= 0 && differingIndex < beforeRanges.size()
+              ? beforeRanges.get(differingIndex)
+              : null;
       errors.add(
           new ValidationError(
-              ErrorType.STATEMENT, "Formatted XML changed SQL statement structure", null));
+              ErrorType.STATEMENT, "Formatted XML changed SQL statement structure", location));
     }
   }
 
@@ -387,6 +397,35 @@ public final class Validator {
           new TextMatch(matcher.group(), sourceRange(value, matcher.start(), matcher.end())));
     }
     return matches;
+  }
+
+  private List<Range> sqlStatementRanges(String source) {
+    Matcher matcher = SQL_ELEMENT.matcher(source);
+    List<Range> ranges = new ArrayList<>();
+    while (matcher.find()) {
+      int start = skipLeadingWhitespace(source, matcher.start(2), matcher.end(2));
+      int end = trimTrailingWhitespace(source, start, matcher.end(2));
+      if (start < end) {
+        ranges.add(sourceRange(source, start, end));
+      }
+    }
+    return ranges;
+  }
+
+  private int skipLeadingWhitespace(String source, int start, int end) {
+    int index = start;
+    while (index < end && Character.isWhitespace(source.charAt(index))) {
+      index++;
+    }
+    return index;
+  }
+
+  private int trimTrailingWhitespace(String source, int start, int end) {
+    int index = end;
+    while (index > start && Character.isWhitespace(source.charAt(index - 1))) {
+      index--;
+    }
+    return index;
   }
 
   private int firstDifferingIndex(List<?> before, List<?> after) {
