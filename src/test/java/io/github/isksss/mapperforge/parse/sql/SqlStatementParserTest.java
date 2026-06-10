@@ -58,6 +58,27 @@ final class SqlStatementParserTest {
   }
 
   @Test
+  void parsesSelectGroupHavingOrderLimitAndOffset() {
+    SelectStatement statement =
+        (SelectStatement)
+            parse(
+                "select tenant_id, count(*) from users where active = 1 group by tenant_id "
+                    + "having count(*) > 10 order by tenant_id desc limit 20 offset 40");
+
+    assertEquals("users", statement.from());
+    assertInstanceOf(BinaryExpression.class, statement.where());
+    assertEquals(1, statement.groupBy().size());
+    assertEquals("tenant_id", ((ColumnExpression) statement.groupBy().getFirst()).name());
+    assertInstanceOf(BinaryExpression.class, statement.having());
+    assertEquals(1, statement.orderBy().size());
+    assertEquals(
+        "tenant_id", ((ColumnExpression) statement.orderBy().getFirst().expression()).name());
+    assertEquals("DESC", statement.orderBy().getFirst().direction());
+    assertEquals("20", ((LiteralExpression) statement.limit()).value());
+    assertEquals("40", ((LiteralExpression) statement.offset()).value());
+  }
+
+  @Test
   void parsesInsertColumnsAndValues() {
     InsertStatement statement =
         (InsertStatement) parse("insert into users (id, name) values (#{id}, #{name})");

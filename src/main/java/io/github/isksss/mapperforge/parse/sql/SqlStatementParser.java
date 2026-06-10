@@ -68,16 +68,43 @@ public final class SqlStatementParser {
       return new SelectStatement(sql);
     }
     int whereIndex = topLevelKeyword("WHERE", fromIndex + 1);
+    int groupIndex = topLevelKeywordPair("GROUP", "BY", fromIndex + 1);
+    int havingIndex = topLevelKeyword("HAVING", fromIndex + 1);
+    int orderIndex = topLevelKeywordPair("ORDER", "BY", fromIndex + 1);
+    int limitIndex = topLevelKeyword("LIMIT", fromIndex + 1);
+    int offsetIndex = topLevelKeyword("OFFSET", fromIndex + 1);
     List<Expression> selectItems = parseExpressionList(tokensBetween(1, fromIndex));
-    String from =
-        whereIndex >= 0
-            ? tokensBetween(fromIndex + 1, whereIndex).strip()
-            : tokensBetween(fromIndex + 1, eofIndex()).strip();
+    String from = tokensBetween(fromIndex + 1, nextClauseIndex(fromIndex)).strip();
     Expression where =
         whereIndex >= 0
-            ? new SqlExpressionParser(tokensBetween(whereIndex + 1, eofIndex())).parse()
+            ? new SqlExpressionParser(tokensBetween(whereIndex + 1, nextClauseIndex(whereIndex)))
+                .parse()
             : new UnknownExpression("");
-    return new SelectStatement(sql, selectItems, from, where);
+    List<Expression> groupBy =
+        groupIndex >= 0
+            ? parseExpressionList(tokensBetween(groupIndex + 2, nextClauseIndex(groupIndex)))
+            : List.of();
+    Expression having =
+        havingIndex >= 0
+            ? new SqlExpressionParser(tokensBetween(havingIndex + 1, nextClauseIndex(havingIndex)))
+                .parse()
+            : new UnknownExpression("");
+    List<SelectStatement.OrderByItem> orderBy =
+        orderIndex >= 0
+            ? parseOrderBy(tokensBetween(orderIndex + 2, nextClauseIndex(orderIndex)))
+            : List.of();
+    Expression limit =
+        limitIndex >= 0
+            ? new SqlExpressionParser(tokensBetween(limitIndex + 1, nextClauseIndex(limitIndex)))
+                .parse()
+            : new UnknownExpression("");
+    Expression offset =
+        offsetIndex >= 0
+            ? new SqlExpressionParser(tokensBetween(offsetIndex + 1, nextClauseIndex(offsetIndex)))
+                .parse()
+            : new UnknownExpression("");
+    return new SelectStatement(
+        sql, selectItems, from, where, groupBy, having, orderBy, limit, offset);
   }
 
   private InsertStatement parseInsert() {
@@ -162,6 +189,27 @@ public final class SqlStatementParser {
         .toList();
   }
 
+  private List<SelectStatement.OrderByItem> parseOrderBy(String raw) {
+    return parseCommaSeparated(raw).stream()
+        .map(String::strip)
+        .filter(value -> !value.isEmpty())
+        .map(this::parseOrderByItem)
+        .toList();
+  }
+
+  private SelectStatement.OrderByItem parseOrderByItem(String raw) {
+    String upper = raw.toUpperCase(java.util.Locale.ROOT);
+    if (upper.endsWith(" DESC")) {
+      return new SelectStatement.OrderByItem(
+          new SqlExpressionParser(raw.substring(0, raw.length() - 5).strip()).parse(), "DESC");
+    }
+    if (upper.endsWith(" ASC")) {
+      return new SelectStatement.OrderByItem(
+          new SqlExpressionParser(raw.substring(0, raw.length() - 4).strip()).parse(), "ASC");
+    }
+    return new SelectStatement.OrderByItem(new SqlExpressionParser(raw).parse(), "");
+  }
+
   private List<UpdateStatement.Assignment> parseAssignments(String raw) {
     return parseCommaSeparated(raw).stream()
         .map(String::strip)
@@ -214,6 +262,33 @@ public final class SqlStatementParser {
       }
     }
     return -1;
+  }
+
+  private int topLevelKeywordPair(String first, String second, int start) {
+    int firstIndex = topLevelKeyword(first, start);
+    while (firstIndex >= 0 && firstIndex + 1 < eofIndex()) {
+      if (tokens.get(firstIndex + 1).type() == TokenType.KEYWORD
+          && second.equals(tokens.get(firstIndex + 1).text())) {
+        return firstIndex;
+      }
+      firstIndex = topLevelKeyword(first, firstIndex + 1);
+    }
+    return -1;
+  }
+
+  private int nextClauseIndex(int currentClauseIndex) {
+    return List.of(
+            topLevelKeyword("WHERE", currentClauseIndex + 1),
+            topLevelKeywordPair("GROUP", "BY", currentClauseIndex + 1),
+            topLevelKeyword("HAVING", currentClauseIndex + 1),
+            topLevelKeywordPair("ORDER", "BY", currentClauseIndex + 1),
+            topLevelKeyword("LIMIT", currentClauseIndex + 1),
+            topLevelKeyword("OFFSET", currentClauseIndex + 1),
+            eofIndex())
+        .stream()
+        .filter(index -> index > currentClauseIndex)
+        .min(Integer::compareTo)
+        .orElse(eofIndex());
   }
 
   private String tokensBetween(int startInclusive, int endExclusive) {

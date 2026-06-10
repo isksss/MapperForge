@@ -42,8 +42,14 @@ public final class SqlTokenizer {
           "ROW",
           "OVER",
           "PARTITION",
+          "GROUP",
+          "HAVING",
           "ORDER",
           "BY",
+          "LIMIT",
+          "OFFSET",
+          "ASC",
+          "DESC",
           "JSON");
 
   private final String sql;
