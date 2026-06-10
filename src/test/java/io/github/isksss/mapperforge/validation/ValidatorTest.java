@@ -57,15 +57,29 @@ final class ValidatorTest {
   @Test
   void rejectsGenericElementAttributeChanges() {
     SourceFile before =
-        new SourceFile("before.xml", "<mapper namespace=\"sample\"><unknown a=\"1\"/></mapper>");
+        new SourceFile(
+            "before.xml",
+            """
+            <mapper namespace="sample">
+                <unknown a="1"/>
+            </mapper>
+            """);
     SourceFile after =
-        new SourceFile("after.xml", "<mapper namespace=\"sample\"><unknown a=\"2\"/></mapper>");
+        new SourceFile(
+            "after.xml",
+            """
+            <mapper namespace="sample">
+                <unknown a="2"/>
+            </mapper>
+            """);
 
     ValidationResult result = validator.validate(before, after, FormatterConfig.defaults());
 
     assertFalse(result.success());
     assertEquals(ErrorType.GENERIC_ELEMENT, result.errors().getFirst().type());
     assertEquals(ErrorCode.VALIDATION_ERROR, result.errors().getFirst().code());
+    assertEquals(2, result.errors().getFirst().location().start().line());
+    assertEquals(5, result.errors().getFirst().location().start().column());
   }
 
   @Test

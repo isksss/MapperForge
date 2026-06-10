@@ -48,6 +48,8 @@ public final class Validator {
   private static final Pattern XML_COMMENT = Pattern.compile("<!--.*?-->", Pattern.DOTALL);
   private static final Pattern SQL_COMMENT =
       Pattern.compile("--[^\\r\\n]*|/\\*.*?\\*/", Pattern.DOTALL);
+  private static final Pattern START_TAG =
+      Pattern.compile("<([A-Za-z][\\w:-]*)\\b[^>]*>", Pattern.DOTALL);
   private static final Pattern XML_ENTITY =
       Pattern.compile("&(?:amp|lt|gt|quot|apos);", Pattern.CASE_INSENSITIVE);
   private static final Pattern OGNL_ATTRIBUTE =
@@ -132,6 +134,9 @@ public final class Validator {
     }
     if (type == ErrorType.EXPRESSION) {
       return firstDifferingOgnlAttributeRange(before, after);
+    }
+    if (type == ErrorType.GENERIC_ELEMENT) {
+      return firstDifferingStartTagRange(before, after);
     }
     return null;
   }
@@ -453,6 +458,18 @@ public final class Validator {
             afterMatches.stream().map(TextMatch::value).toList());
     return differingIndex >= 0 && differingIndex < beforeMatches.size()
         ? beforeMatches.get(differingIndex).range()
+        : null;
+  }
+
+  private Range firstDifferingStartTagRange(String before, String after) {
+    List<TextMatch> beforeTags = findMatches(START_TAG, before);
+    List<TextMatch> afterTags = findMatches(START_TAG, after);
+    int differingIndex =
+        firstDifferingIndex(
+            beforeTags.stream().map(TextMatch::value).toList(),
+            afterTags.stream().map(TextMatch::value).toList());
+    return differingIndex >= 0 && differingIndex < beforeTags.size()
+        ? beforeTags.get(differingIndex).range()
         : null;
   }
 
