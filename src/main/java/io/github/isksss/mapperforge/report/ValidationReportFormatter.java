@@ -6,7 +6,15 @@ import io.github.isksss.mapperforge.validation.ValidationResult;
 import java.nio.file.Path;
 import java.util.stream.Collectors;
 
+/** ValidationResult を人間が読める report 文字列へ変換します。 */
 public final class ValidationReportFormatter {
+  /**
+   * 対象 file の validation result を report 文字列へ変換します。
+   *
+   * @param file validation 対象 file
+   * @param validation validation result
+   * @return report 文字列
+   */
   public String format(Path file, ValidationResult validation) {
     if (validation.success()) {
       return "MapperForge validation passed: " + file;

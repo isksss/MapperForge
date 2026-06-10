@@ -119,7 +119,7 @@ This document maps the main `PLAN.local.md` requirements to implementation and v
 
 | Requirement | Evidence |
 | --- | --- |
-| SLF4J logging | `MapperForgeLoggers`, Gradle dependencies |
+| SLF4J logging | `MapperForgeLoggers`, `MapperForgeLoggersTest`, Gradle dependencies |
 | Parser/formatter/validator/gradle categories | `MapperForgeLoggers`, `MapperForgeLoggersTest` |
 | Central logger usage | `MapperXmlParser`, `MapperXmlFormatter`, `Validator`, `MapperForgeTask`, `MapperForgeLoggersTest` |
 

@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 final class MapperForgeLoggersTest {
@@ -15,6 +16,21 @@ final class MapperForgeLoggersTest {
     assertEquals("io.github.isksss.mapperforge.formatter", MapperForgeLoggers.FORMATTER.getName());
     assertEquals("io.github.isksss.mapperforge.validator", MapperForgeLoggers.VALIDATOR.getName());
     assertEquals("io.github.isksss.mapperforge.gradle", MapperForgeLoggers.GRADLE.getName());
+  }
+
+  @Test
+  void exposesPlanLoggingCategoriesInPlanOrder() {
+    assertEquals(
+        List.of(
+            "io.github.isksss.mapperforge.parser",
+            "io.github.isksss.mapperforge.formatter",
+            "io.github.isksss.mapperforge.validator",
+            "io.github.isksss.mapperforge.gradle"),
+        List.of(
+            MapperForgeLoggers.PARSER.getName(),
+            MapperForgeLoggers.FORMATTER.getName(),
+            MapperForgeLoggers.VALIDATOR.getName(),
+            MapperForgeLoggers.GRADLE.getName()));
   }
 
   @Test
