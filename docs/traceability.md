@@ -30,6 +30,7 @@ This document maps the main `PLAN.local.md` requirements to implementation and v
 | `mapperforge.yml` | `ConfigLoader`, `ConfigLoaderTest` |
 | Gradle > YAML > defaults precedence | `MapperForgeTask.configureFrom`, `MapperForgePluginFunctionalTest` |
 | SemVer formatter version | `FormatterConfig`, `ConfigLoaderTest`, `MapperForgePluginFunctionalTest` |
+| Formatter defaults | `FormatterConfig.defaults`, `FormatterConfigTest`, `ConfigLoaderTest` |
 | Include/exclude file selection | `MapperForgeTask`, `MapperForgePluginFunctionalTest` |
 | Attribute order DSL helper | `MapperForgeExtension.attributeOrder`, `MapperForgeExtensionTest` |
 | Configuration reference | `docs/configuration.md`, `docs/ja/configuration.md` |

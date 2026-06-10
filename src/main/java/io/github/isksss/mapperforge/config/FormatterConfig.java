@@ -3,6 +3,26 @@ package io.github.isksss.mapperforge.config;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * MapperForge formatter の全設定を保持する immutable config です。
+ *
+ * @param dialect 対象 SQL dialect
+ * @param formatterVersion formatter の SemVer バージョン
+ * @param include 処理対象 file の include glob
+ * @param exclude 処理対象から除外する exclude glob
+ * @param indentSize インデント幅
+ * @param maxLineLength 最大行長
+ * @param lineEnding 出力改行コード
+ * @param sqlFormatStyle SQL formatter の出力スタイル
+ * @param sqlPrinter SQL printer 実装
+ * @param tagWrapStyle XML tag の折り返し方針
+ * @param attributeLayout XML attribute の配置方針
+ * @param preserveWhitespace 空白 node を意味検証対象として保持するか
+ * @param preserveCdata CDATA wrapper を保持するか
+ * @param formatSqlInsideCdata CDATA 内 SQL を整形するか
+ * @param strict 検証失敗時に task を失敗させるか
+ * @param attributeOrder tag ごとの attribute 順序設定
+ */
 public record FormatterConfig(
     Dialect dialect,
     String formatterVersion,
@@ -20,6 +40,7 @@ public record FormatterConfig(
     boolean formatSqlInsideCdata,
     boolean strict,
     Map<String, List<String>> attributeOrder) {
+  /** 設定値を検証し、表記揺れを正規化します。 */
   public FormatterConfig {
     if (!isSemVer(formatterVersion)) {
       throw new IllegalArgumentException("formatterVersion must be SemVer: " + formatterVersion);
@@ -34,6 +55,11 @@ public record FormatterConfig(
     lineEnding = normalizeLineEnding(lineEnding);
   }
 
+  /**
+   * PLAN v1 の default formatter 設定を返します。
+   *
+   * @return default formatter 設定
+   */
   public static FormatterConfig defaults() {
     return new FormatterConfig(
         Dialect.POSTGRESQL,
