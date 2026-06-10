@@ -301,6 +301,33 @@ final class MapperForgePluginFunctionalTest {
     assertTrue(Files.readString(mapper, StandardCharsets.UTF_8).contains("<![CDATA[SELECT"));
   }
 
+  @Test
+  void nonStrictFormatTaskWarnsAndKeepsOriginalWhenValidationFails() throws IOException {
+    writeProject(
+        """
+        mapperForge {
+            preserveWhitespace = true
+            strict = false
+        }
+        """);
+    Path mapper = projectDir.resolve("src/main/resources/sample/UserMapper.xml");
+    Files.createDirectories(mapper.getParent());
+    String original =
+        "<mapper namespace=\"sample.UserMapper\"><select id=\"find\">select id from users</select></mapper>";
+    Files.writeString(mapper, original, StandardCharsets.UTF_8);
+
+    var result =
+        GradleRunner.create()
+            .withProjectDir(projectDir.toFile())
+            .withPluginClasspath()
+            .withArguments("mapperForgeFormat", "--warning-mode=all")
+            .build();
+
+    assertEquals(TaskOutcome.SUCCESS, result.task(":mapperForgeFormat").getOutcome());
+    assertTrue(result.getOutput().contains("MapperForge validation failed"));
+    assertEquals(original, Files.readString(mapper, StandardCharsets.UTF_8));
+  }
+
   private void writeProject() throws IOException {
     writeProject("");
   }
