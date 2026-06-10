@@ -52,6 +52,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+/** MyBatis Mapper XML を Woodstox で読み取り、Mapper AST へ変換します。 */
 public final class MapperXmlParser {
   private static final Set<String> SQL_TEXT_TAGS =
       Set.of(
@@ -68,6 +69,16 @@ public final class MapperXmlParser {
           "where",
           "set");
 
+  /** parser instance を作成します。 */
+  public MapperXmlParser() {}
+
+  /**
+   * source を MyBatis mapper として parse します。
+   *
+   * @param source parse 対象の source
+   * @return root が {@code <mapper>} の場合は mapper node、それ以外は空
+   * @throws ParserException XML として parse できない場合
+   */
   public Optional<MapperElementNode> parseMapper(SourceFile source) {
     MapperForgeLoggers.PARSER.debug("Parsing mapper XML: {}", source.fileName());
     ElementNode root = parse(source);
@@ -77,6 +88,13 @@ public final class MapperXmlParser {
     return Optional.of(mapper);
   }
 
+  /**
+   * source XML を root element node へ parse します。
+   *
+   * @param source parse 対象の source
+   * @return root element node
+   * @throws ParserException XML として parse できない場合、または root element がない場合
+   */
   public ElementNode parse(SourceFile source) {
     MapperForgeLoggers.PARSER.debug("Parsing XML source: {}", source.fileName());
     XMLInputFactory factory = new WstxInputFactory();
@@ -229,18 +247,35 @@ public final class MapperXmlParser {
     }
   }
 
+  /** Mapper XML parser の失敗を表す例外です。 */
   public static final class ParserException extends RuntimeException {
     private final ErrorCode code;
 
+    /**
+     * message 付き parser exception を作成します。
+     *
+     * @param message error message
+     */
     public ParserException(String message) {
       this(message, null);
     }
 
+    /**
+     * message と cause 付き parser exception を作成します。
+     *
+     * @param message error message
+     * @param cause 原因例外
+     */
     public ParserException(String message, Throwable cause) {
       super(message, cause);
       this.code = ErrorCode.PARSER_ERROR;
     }
 
+    /**
+     * parser error code を返します。
+     *
+     * @return {@link ErrorCode#PARSER_ERROR}
+     */
     public ErrorCode code() {
       return code;
     }

@@ -19,6 +19,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+/** MyBatis Mapper XML を設定に従って整形します。 */
 public final class MapperXmlFormatter {
   private static final Set<String> SQL_TEXT_TAGS =
       Set.of(
@@ -39,6 +40,17 @@ public final class MapperXmlFormatter {
   private final OgnlFormatter ognlFormatter = new OgnlFormatter();
   private final SqlFormatter sqlFormatter = new SqlFormatter();
 
+  /** formatter instance を作成します。 */
+  public MapperXmlFormatter() {}
+
+  /**
+   * source を指定設定で整形します。
+   *
+   * @param source 整形対象の source
+   * @param config formatter 設定
+   * @return 整形後の XML
+   * @throws FormatterException XML を読み取れない場合
+   */
   public String format(SourceFile source, FormatterConfig config) {
     MapperForgeLoggers.FORMATTER.debug("Formatting mapper XML: {}", source.fileName());
     XMLInputFactory factory = new WstxInputFactory();
@@ -276,14 +288,26 @@ public final class MapperXmlFormatter {
 
   private record XmlAttribute(String name, String value) {}
 
+  /** Mapper XML formatter の失敗を表す例外です。 */
   public static final class FormatterException extends RuntimeException {
     private final ErrorCode code;
 
+    /**
+     * message と cause 付き formatter exception を作成します。
+     *
+     * @param message error message
+     * @param cause 原因例外
+     */
     public FormatterException(String message, Throwable cause) {
       super(message, cause);
       this.code = ErrorCode.FORMAT_ERROR;
     }
 
+    /**
+     * formatter error code を返します。
+     *
+     * @return {@link ErrorCode#FORMAT_ERROR}
+     */
     public ErrorCode code() {
       return code;
     }
