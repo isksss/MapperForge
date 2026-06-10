@@ -34,6 +34,18 @@ import io.github.isksss.mapperforge.ast.mapper.TrimElementNode;
 import io.github.isksss.mapperforge.ast.mapper.UpdateElementNode;
 import io.github.isksss.mapperforge.ast.mapper.WhenElementNode;
 import io.github.isksss.mapperforge.ast.mapper.WhereElementNode;
+import io.github.isksss.mapperforge.ast.ognl.OgnlCallExpression;
+import io.github.isksss.mapperforge.ast.ognl.OgnlCollectionExpression;
+import io.github.isksss.mapperforge.ast.ognl.OgnlExpression;
+import io.github.isksss.mapperforge.ast.ognl.OgnlLiteralExpression;
+import io.github.isksss.mapperforge.ast.sql.ArrayExpression;
+import io.github.isksss.mapperforge.ast.sql.CaseExpression;
+import io.github.isksss.mapperforge.ast.sql.ColumnExpression;
+import io.github.isksss.mapperforge.ast.sql.Expression;
+import io.github.isksss.mapperforge.ast.sql.FunctionExpression;
+import io.github.isksss.mapperforge.ast.sql.InExpression;
+import io.github.isksss.mapperforge.ast.sql.LiteralExpression;
+import io.github.isksss.mapperforge.ast.sql.RowExpression;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
@@ -98,6 +110,54 @@ final class AstImmutabilityTest {
     assertThrows(
         UnsupportedOperationException.class,
         () -> node.children().add(new TextNode(TextType.SQL, "order by id")));
+  }
+
+  @Test
+  void sqlExpressionListsAreDefensivelyCopied() {
+    List<Expression> values = new ArrayList<>();
+    values.add(new LiteralExpression("1"));
+
+    ArrayExpression array = new ArrayExpression(values);
+    RowExpression row = new RowExpression(values);
+    FunctionExpression function = new FunctionExpression("coalesce", values);
+    InExpression in = new InExpression(new ColumnExpression("status"), values);
+    values.add(new LiteralExpression("2"));
+
+    assertListIsCopiedAndUnmodifiable(array.values(), new LiteralExpression("3"));
+    assertListIsCopiedAndUnmodifiable(row.values(), new LiteralExpression("3"));
+    assertListIsCopiedAndUnmodifiable(function.arguments(), new LiteralExpression("3"));
+    assertListIsCopiedAndUnmodifiable(in.values(), new LiteralExpression("3"));
+
+    List<CaseExpression.WhenClause> clauses = new ArrayList<>();
+    clauses.add(
+        new CaseExpression.WhenClause(new ColumnExpression("active"), new LiteralExpression("1")));
+    CaseExpression caseExpression = new CaseExpression(clauses, new LiteralExpression("0"));
+    clauses.add(
+        new CaseExpression.WhenClause(new ColumnExpression("locked"), new LiteralExpression("2")));
+
+    assertListIsCopiedAndUnmodifiable(
+        caseExpression.whenClauses(),
+        new CaseExpression.WhenClause(new ColumnExpression("deleted"), new LiteralExpression("3")));
+  }
+
+  @Test
+  void ognlExpressionListsAreDefensivelyCopied() {
+    List<OgnlExpression> values = new ArrayList<>();
+    values.add(new OgnlLiteralExpression("ACTIVE", "'ACTIVE'"));
+
+    OgnlCallExpression call = new OgnlCallExpression("allowed", values);
+    OgnlCollectionExpression collection = new OgnlCollectionExpression(values);
+    values.add(new OgnlLiteralExpression("LOCKED", "'LOCKED'"));
+
+    assertListIsCopiedAndUnmodifiable(
+        call.arguments(), new OgnlLiteralExpression("DELETED", "'DELETED'"));
+    assertListIsCopiedAndUnmodifiable(
+        collection.values(), new OgnlLiteralExpression("DELETED", "'DELETED'"));
+  }
+
+  private static <T> void assertListIsCopiedAndUnmodifiable(List<T> actual, T newValue) {
+    assertTrue(actual.size() == 1);
+    assertThrows(UnsupportedOperationException.class, () -> actual.add(newValue));
   }
 
   private static ElementNode newElementNode(

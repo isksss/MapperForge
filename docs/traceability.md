@@ -54,7 +54,7 @@ This document maps the main `PLAN.local.md` requirements to implementation and v
 | --- | --- |
 | Woodstox XML parser | `MapperXmlParser` |
 | Hybrid mapper AST | `ast/mapper/*`, `MapperXmlParserTest` |
-| Immutable AST and setter prohibition | `ast/*`, `ElementNode`, `AstImmutabilityTest` |
+| Immutable AST and setter prohibition | `ast/*`, `ElementNode`, SQL/OGNL list AST records, `AstImmutabilityTest` |
 | Dedicated MyBatis nodes | `ast/mapper/*ElementNode.java`, `MapperXmlParserTest` |
 | `GenericElement` fallback | `GenericElementNode`, `MapperXmlParserTest`, `ValidatorTest` |
 | `TextNode`, `CommentNode`, `CDataNode` | `ast/mapper`, golden files, `ValidatorTest` |
