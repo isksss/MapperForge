@@ -1,8 +1,6 @@
 # MapperForge
 
-MapperForge is a formatter and checker for MyBatis Mapper XML.
-
-Japanese documentation is available at [docs/ja/README.md](docs/ja/README.md).
+MapperForge は MyBatis Mapper XML 向けの formatter / checker です。
 
 ```kotlin
 plugins {
@@ -12,8 +10,8 @@ plugins {
 mapperForge {
     dialect = "POSTGRESQL"
     include = listOf("src/main/resources/**/*.xml")
-    // LEGACY keeps the v1 golden-compatible SQL formatter.
-    // AST enables the AST -> Doc Tree -> Layout Engine SQL printer.
+    // LEGACY は v1 golden file と互換の SQL formatter を使います。
+    // AST は AST -> Doc Tree -> Layout Engine の SQL printer を使います。
     sqlPrinter = "LEGACY"
 }
 ```
@@ -24,23 +22,23 @@ mapperForge {
 ./gradlew mapperForgeDryRun
 ```
 
-Dockerized MyBatis integration tests:
+Dockerized MyBatis integration test:
 
 ```bash
 ./gradlew integrationTest
 ```
 
-See [docs/configuration.md](docs/configuration.md) for all configuration options.
+全設定項目は [configuration.md](configuration.md) を参照してください。
 
-See [docs/tasks.md](docs/tasks.md) for task behavior.
+Gradle task の挙動は [tasks.md](tasks.md) を参照してください。
 
-See [docs/golden-tests.md](docs/golden-tests.md) for the golden file test workflow.
+Golden file test の運用は [golden-tests.md](golden-tests.md) を参照してください。
 
-See [docs/traceability.md](docs/traceability.md) for the PLAN-to-implementation traceability map.
+`PLAN.local.md` と実装の対応は [traceability.md](traceability.md) を参照してください。
 
 ## GitHub Packages
 
-MapperForge can be consumed as a Gradle plugin from GitHub Packages.
+MapperForge は GitHub Packages から Gradle plugin として利用できます。
 
 ```kotlin
 // settings.gradle.kts
@@ -66,17 +64,17 @@ plugins {
 }
 ```
 
-Publish a release package by pushing a version tag:
+version tag を push すると release package を publish します。
 
 ```bash
 git tag v0.1.0
 git push origin v0.1.0
 ```
 
-Local publication check:
+local publication check:
 
 ```bash
 ./gradlew publishToMavenLocal -PreleaseVersion=0.1.0-local
 ```
 
-See [docs/release.md](docs/release.md) for the release checklist.
+release checklist は [release.md](release.md) を参照してください。

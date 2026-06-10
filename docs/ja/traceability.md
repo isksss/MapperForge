@@ -1,6 +1,6 @@
 # PLAN Traceability
 
-This document maps the main `PLAN.local.md` requirements to implementation and verification entry points. It is a traceability aid, not a completion certificate.
+この文書は、主要な `PLAN.local.md` requirement と実装・検証 entry point の対応を示します。完了証明ではなく、traceability aid です。
 
 ## Project Metadata
 
