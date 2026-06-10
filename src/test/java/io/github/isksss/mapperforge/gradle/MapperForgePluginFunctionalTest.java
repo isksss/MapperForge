@@ -92,14 +92,13 @@ final class MapperForgePluginFunctionalTest {
   }
 
   @Test
-  void dryRunPrintsUnifiedDiff() throws IOException {
+  void dryRunPrintsUnifiedDiffWithoutWritingFile() throws IOException {
     writeProject();
     Path mapper = projectDir.resolve("src/main/resources/sample/UserMapper.xml");
     Files.createDirectories(mapper.getParent());
-    Files.writeString(
-        mapper,
-        "<mapper namespace=\"sample.UserMapper\"><select id=\"find\">select id from users</select></mapper>",
-        StandardCharsets.UTF_8);
+    String original =
+        "<mapper namespace=\"sample.UserMapper\"><select id=\"find\">select id from users</select></mapper>";
+    Files.writeString(mapper, original, StandardCharsets.UTF_8);
 
     var result =
         GradleRunner.create()
@@ -112,6 +111,7 @@ final class MapperForgePluginFunctionalTest {
     assertTrue(result.getOutput().contains("--- src/main/resources/sample/UserMapper.xml"));
     assertTrue(result.getOutput().contains("+++ src/main/resources/sample/UserMapper.xml"));
     assertTrue(result.getOutput().contains("+        SELECT"));
+    assertEquals(original, Files.readString(mapper, StandardCharsets.UTF_8));
   }
 
   @Test
