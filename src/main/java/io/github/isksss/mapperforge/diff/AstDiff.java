@@ -2,6 +2,7 @@ package io.github.isksss.mapperforge.diff;
 
 import io.github.isksss.mapperforge.ast.mapper.AttributeNode;
 import io.github.isksss.mapperforge.ast.mapper.CDataNode;
+import io.github.isksss.mapperforge.ast.mapper.CommentNode;
 import io.github.isksss.mapperforge.ast.mapper.ElementNode;
 import io.github.isksss.mapperforge.ast.mapper.MapperNode;
 import io.github.isksss.mapperforge.ast.mapper.TextNode;
@@ -68,6 +69,9 @@ public final class AstDiff {
         }
       }
       case CDataNode cdata -> descriptors.add(path + " cdata: " + normalizeSql(cdata.raw()));
+      case CommentNode comment ->
+          descriptors.add(
+              path + " comment(" + comment.type() + "): " + normalizeText(comment.content()));
       default -> {}
     }
   }

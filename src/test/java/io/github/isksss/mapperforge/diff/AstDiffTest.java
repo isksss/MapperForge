@@ -69,4 +69,58 @@ final class AstDiffTest {
         """,
         diff.create(before, after));
   }
+
+  @Test
+  void reportsXmlCommentChanges() {
+    SourceFile before =
+        new SourceFile(
+            "UserMapper.xml",
+            "<mapper namespace=\"sample\"><!-- keep me --><select id=\"find\">select id from users</select></mapper>");
+    SourceFile after =
+        new SourceFile(
+            "UserMapper.xml",
+            "<mapper namespace=\"sample\"><!-- changed --><select id=\"find\">select id from users</select></mapper>");
+
+    assertEquals(
+        """
+        # AST Diff
+        - /mapper[0] comment(XML): keep me
+        + /mapper[0] comment(XML): changed
+        """,
+        diff.create(before, after));
+  }
+
+  @Test
+  void reportsSqlCommentChanges() {
+    SourceFile before =
+        new SourceFile(
+            "UserMapper.xml",
+            """
+            <mapper namespace="sample">
+                <select id="find">
+                    select id -- keep selected columns
+                    from users
+                </select>
+            </mapper>
+            """);
+    SourceFile after =
+        new SourceFile(
+            "UserMapper.xml",
+            """
+            <mapper namespace="sample">
+                <select id="find">
+                    select id -- changed
+                    from users
+                </select>
+            </mapper>
+            """);
+
+    assertEquals(
+        """
+        # AST Diff
+        - /mapper[0]/select[0] comment(SQL): -- keep selected columns
+        + /mapper[0]/select[0] comment(SQL): -- changed
+        """,
+        diff.create(before, after));
+  }
 }
