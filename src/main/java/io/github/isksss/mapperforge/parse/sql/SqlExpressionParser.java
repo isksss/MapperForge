@@ -53,7 +53,11 @@ public final class SqlExpressionParser {
 
   public Expression parse() {
     try {
-      return parseExpression(0);
+      Expression expression = parseExpression(0);
+      if (!isAtEnd() || expression instanceof UnknownExpression) {
+        return new UnknownExpression(sql);
+      }
+      return expression;
     } catch (RuntimeException e) {
       return new UnknownExpression(sql);
     }
@@ -92,6 +96,9 @@ public final class SqlExpressionParser {
       }
       advanceOperator(operator);
       Expression right = parseExpression(precedence + 1);
+      if (right instanceof UnknownExpression) {
+        return new UnknownExpression(sql);
+      }
       left = new BinaryExpression(left, operator, right);
     }
     return left;

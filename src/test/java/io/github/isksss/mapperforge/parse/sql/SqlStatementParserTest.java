@@ -13,6 +13,7 @@ import io.github.isksss.mapperforge.ast.sql.PlaceholderExpression;
 import io.github.isksss.mapperforge.ast.sql.SelectStatement;
 import io.github.isksss.mapperforge.ast.sql.SetOperationStatement;
 import io.github.isksss.mapperforge.ast.sql.Statement;
+import io.github.isksss.mapperforge.ast.sql.UnknownExpression;
 import io.github.isksss.mapperforge.ast.sql.UnknownStatement;
 import io.github.isksss.mapperforge.ast.sql.UpdateStatement;
 import io.github.isksss.mapperforge.ast.sql.WithStatement;
@@ -192,6 +193,15 @@ final class SqlStatementParserTest {
   @Test
   void fallsBackToUnknownStatement() {
     assertInstanceOf(UnknownStatement.class, parse("merge into users using source"));
+  }
+
+  @Test
+  void keepsUnsupportedWhereExpressionAsUnknownExpression() {
+    SelectStatement statement =
+        (SelectStatement) parse("select id from users where name is not null");
+
+    UnknownExpression where = assertInstanceOf(UnknownExpression.class, statement.where());
+    assertEquals("name is not null", where.raw());
   }
 
   private Statement parse(String sql) {

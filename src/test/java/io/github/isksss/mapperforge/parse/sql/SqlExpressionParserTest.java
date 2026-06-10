@@ -19,6 +19,7 @@ import io.github.isksss.mapperforge.ast.sql.PlaceholderExpression;
 import io.github.isksss.mapperforge.ast.sql.RowExpression;
 import io.github.isksss.mapperforge.ast.sql.SubQueryExpression;
 import io.github.isksss.mapperforge.ast.sql.UnaryExpression;
+import io.github.isksss.mapperforge.ast.sql.UnknownExpression;
 import io.github.isksss.mapperforge.ast.sql.WindowExpression;
 import org.junit.jupiter.api.Test;
 
@@ -113,6 +114,21 @@ final class SqlExpressionParserTest {
     FunctionExpression function = assertInstanceOf(FunctionExpression.class, window.expression());
     assertEquals("count", function.name());
     assertEquals("partition by tenant_id order by created_at", window.windowSpec());
+  }
+
+  @Test
+  void fallsBackToUnknownExpressionWhenTokensRemain() {
+    UnknownExpression expression =
+        assertInstanceOf(UnknownExpression.class, parse("name is not null"));
+
+    assertEquals("name is not null", expression.raw());
+  }
+
+  @Test
+  void fallsBackToUnknownExpressionForMalformedExpression() {
+    UnknownExpression expression = assertInstanceOf(UnknownExpression.class, parse("a + )"));
+
+    assertEquals("a + )", expression.raw());
   }
 
   private static Expression parse(String sql) {
