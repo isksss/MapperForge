@@ -7,7 +7,11 @@ import io.github.isksss.mapperforge.format.FormatterContext;
 import java.util.Comparator;
 import java.util.List;
 
+/** 設定された属性順序に従って要素属性を並べ替えるルールです。 */
 public final class AttributeOrderRule extends RecursiveRule {
+  /** 属性順序ルールを作成します。 */
+  public AttributeOrderRule() {}
+
   @Override
   protected MapperNode applyCurrent(MapperNode node, FormatterContext context) {
     if (!(node instanceof ElementNode element)) {

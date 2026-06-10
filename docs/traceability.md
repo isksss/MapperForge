@@ -85,6 +85,7 @@ This document maps the main `PLAN.local.md` requirements to implementation and v
 
 | Requirement | Evidence |
 | --- | --- |
+| Fixed v1 rule pipeline | `FormatterRulePipeline`, `FormatterRulePipelineTest` |
 | Idempotent formatting | `GoldenFileTest.goldenFilesAreIdempotent` |
 | Golden file tests | `src/test/resources/golden/*`, `GoldenFileTest` |
 | Dynamic SQL formatting | `dynamic-sql`, `foreach-choose`, `ognl-dynamic-attributes` golden files |

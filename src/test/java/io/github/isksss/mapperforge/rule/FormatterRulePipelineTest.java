@@ -12,11 +12,31 @@ import io.github.isksss.mapperforge.ast.mapper.TextType;
 import io.github.isksss.mapperforge.config.FormatterConfig;
 import io.github.isksss.mapperforge.format.FormatterContext;
 import io.github.isksss.mapperforge.source.SourceFile;
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 final class FormatterRulePipelineTest {
+  @Test
+  void v1UsesFixedRuleOrder() throws ReflectiveOperationException {
+    Field rules = FormatterRulePipeline.class.getDeclaredField("rules");
+    rules.setAccessible(true);
+
+    @SuppressWarnings("unchecked")
+    List<FormatterRule> configuredRules =
+        (List<FormatterRule>) rules.get(FormatterRulePipeline.v1());
+
+    assertEquals(
+        List.of(
+            NormalizeRule.class,
+            AttributeOrderRule.class,
+            OgnlFormatRule.class,
+            SqlFormatRule.class,
+            WrapRule.class),
+        configuredRules.stream().map(Object::getClass).toList());
+  }
+
   @Test
   void appliesAttributeOgnlAndSqlRulesWithoutMutatingInput() {
     SelectElementNode input =
