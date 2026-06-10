@@ -7,6 +7,7 @@ public enum TokenType {
   NUMBER,
   SYMBOL,
   PLACEHOLDER,
+  COMMENT,
   EOF,
   UNKNOWN
 }

@@ -83,6 +83,8 @@ public final class SqlTokenizer {
       char current = peek();
       if (Character.isWhitespace(current)) {
         advance();
+      } else if (startsWith("--") || startsWith("/*")) {
+        tokens.add(comment());
       } else if (current == '\'') {
         tokens.add(string());
       } else if (current == '"' || current == '`') {
@@ -182,6 +184,30 @@ public final class SqlTokenizer {
     }
     return new Token(
         TokenType.PLACEHOLDER, sql.substring(startIndex, index), new Range(start, position()));
+  }
+
+  private Token comment() {
+    Position start = position();
+    int startIndex = index;
+    if (startsWith("--")) {
+      advance();
+      advance();
+      while (!isAtEnd() && peek() != '\n' && peek() != '\r') {
+        advance();
+      }
+    } else {
+      advance();
+      advance();
+      while (!isAtEnd() && !startsWith("*/")) {
+        advance();
+      }
+      if (!isAtEnd()) {
+        advance();
+        advance();
+      }
+    }
+    return new Token(
+        TokenType.COMMENT, sql.substring(startIndex, index), new Range(start, position()));
   }
 
   private Token symbol() {

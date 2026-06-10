@@ -24,7 +24,7 @@ public final class SqlStatementParser {
 
   public SqlStatementParser(String sql) {
     this.sql = sql.strip();
-    this.tokens = new SqlTokenizer(this.sql).tokenize();
+    this.tokens = withoutComments(new SqlTokenizer(this.sql).tokenize());
   }
 
   public Statement parse() {
@@ -499,5 +499,9 @@ public final class SqlStatementParser {
 
   private int eofIndex() {
     return tokens.size() - 1;
+  }
+
+  private List<Token> withoutComments(List<Token> parsedTokens) {
+    return parsedTokens.stream().filter(token -> token.type() != TokenType.COMMENT).toList();
   }
 }

@@ -48,7 +48,9 @@ public final class SqlExpressionParser {
 
   public SqlExpressionParser(String sql) {
     this.sql = sql.strip();
-    this.tokens = new SqlTokenizer(this.sql).tokenize();
+    this.tokens =
+        new SqlTokenizer(this.sql)
+            .tokenize().stream().filter(token -> token.type() != TokenType.COMMENT).toList();
   }
 
   public Expression parse() {

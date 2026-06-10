@@ -1,0 +1,2 @@
+<mapper namespace="sample.UserMapper"><select id="find" resultType="User">select id, name -- keep from text
+from users where active = 1 /* keep order by text */</select></mapper>

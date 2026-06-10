@@ -54,4 +54,28 @@ final class SqlTokenizerTest {
     assertEquals(TokenType.IDENTIFIER, tokens.get(5).type());
     assertEquals("`user`", tokens.get(5).text());
   }
+
+  @Test
+  void tokenizesSqlComments() {
+    var tokens =
+        new SqlTokenizer(
+                """
+                select id -- keep selected columns
+                from users /* keep filter */
+                """)
+            .tokenize().stream()
+                .filter(token -> token.type() != TokenType.EOF)
+                .map(token -> token.type() + ":" + token.text().replace("\n", "\\n"))
+                .toList();
+
+    assertEquals(
+        List.of(
+            "KEYWORD:SELECT",
+            "IDENTIFIER:id",
+            "COMMENT:-- keep selected columns",
+            "KEYWORD:FROM",
+            "IDENTIFIER:users",
+            "COMMENT:/* keep filter */"),
+        tokens);
+  }
 }

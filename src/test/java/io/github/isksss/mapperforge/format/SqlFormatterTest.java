@@ -43,6 +43,25 @@ final class SqlFormatterTest {
   }
 
   @Test
+  void preservesSqlCommentsWithoutFormattingTheirContent() {
+    String sql =
+        """
+        select id, name -- keep from text
+        from users
+        where active = 1 /* keep order by text */
+        """;
+
+    assertEquals(
+        """
+        SELECT
+            id,
+            name -- keep from text
+        FROM users
+        WHERE active = 1 /* keep order by text */""",
+        formatter.format(sql, config(SqlFormatStyle.MULTI_LINE, SqlPrinter.LEGACY)));
+  }
+
+  @Test
   void convertsCdataToEscapedTextWhenCdataIsNotPreserved() {
     String before =
         "<mapper namespace=\"sample\"><select id=\"find\"><![CDATA[select id from users where age < #{age} and flags & #{mask}]]></select></mapper>";
