@@ -1,0 +1,13 @@
+<mapper namespace="sample.UserMapper">
+    <sql id="BaseColumns">
+        id,
+            name,
+            email
+    </sql>
+    <select id="findById" resultType="User">
+        SELECT
+        <include refid="BaseColumns"></include>
+        FROM users
+        WHERE id = #{id}
+    </select>
+</mapper>
