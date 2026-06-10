@@ -8,6 +8,7 @@ import io.github.isksss.mapperforge.ast.sql.ColumnExpression;
 import io.github.isksss.mapperforge.ast.sql.DeleteStatement;
 import io.github.isksss.mapperforge.ast.sql.FunctionExpression;
 import io.github.isksss.mapperforge.ast.sql.InsertStatement;
+import io.github.isksss.mapperforge.ast.sql.LiteralExpression;
 import io.github.isksss.mapperforge.ast.sql.PlaceholderExpression;
 import io.github.isksss.mapperforge.ast.sql.SelectStatement;
 import io.github.isksss.mapperforge.ast.sql.SetOperationStatement;
@@ -54,6 +55,40 @@ final class SqlStatementParserTest {
     BinaryExpression left = assertInstanceOf(BinaryExpression.class, where.left());
     assertEquals("=", left.operator());
     assertInstanceOf(PlaceholderExpression.class, left.right());
+  }
+
+  @Test
+  void parsesInsertColumnsAndValues() {
+    InsertStatement statement =
+        (InsertStatement) parse("insert into users (id, name) values (#{id}, #{name})");
+
+    assertEquals("users", statement.table());
+    assertEquals(java.util.List.of("id", "name"), statement.columns());
+    assertEquals(2, statement.values().size());
+    assertInstanceOf(PlaceholderExpression.class, statement.values().get(0));
+  }
+
+  @Test
+  void parsesUpdateAssignmentsAndWhere() {
+    UpdateStatement statement =
+        (UpdateStatement)
+            parse("update users set name = #{name}, updated_at = now() where id = #{id}");
+
+    assertEquals("users", statement.table());
+    assertEquals(2, statement.assignments().size());
+    assertEquals("name", statement.assignments().getFirst().column());
+    assertInstanceOf(PlaceholderExpression.class, statement.assignments().getFirst().value());
+    assertInstanceOf(BinaryExpression.class, statement.where());
+  }
+
+  @Test
+  void parsesDeleteTableAndWhere() {
+    DeleteStatement statement = (DeleteStatement) parse("delete from users where active = 0");
+
+    assertEquals("users", statement.table());
+    BinaryExpression where = assertInstanceOf(BinaryExpression.class, statement.where());
+    assertEquals("=", where.operator());
+    assertInstanceOf(LiteralExpression.class, where.right());
   }
 
   @Test
