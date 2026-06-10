@@ -34,18 +34,35 @@ import io.github.isksss.mapperforge.ast.mapper.TrimElementNode;
 import io.github.isksss.mapperforge.ast.mapper.UpdateElementNode;
 import io.github.isksss.mapperforge.ast.mapper.WhenElementNode;
 import io.github.isksss.mapperforge.ast.mapper.WhereElementNode;
+import io.github.isksss.mapperforge.parse.sql.SqlStatementParser;
 import io.github.isksss.mapperforge.source.SourceFile;
 import java.io.StringReader;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 public final class MapperXmlParser {
+  private static final Set<String> SQL_TEXT_TAGS =
+      Set.of(
+          "select",
+          "insert",
+          "update",
+          "delete",
+          "sql",
+          "if",
+          "when",
+          "otherwise",
+          "foreach",
+          "trim",
+          "where",
+          "set");
+
   public Optional<MapperElementNode> parseMapper(SourceFile source) {
     ElementNode root = parse(source);
     if (!(root instanceof MapperElementNode mapper)) {
@@ -70,13 +87,20 @@ public final class MapperXmlParser {
             if (!stack.isEmpty()) {
               String text = reader.getText();
               if (!text.isBlank()) {
-                stack.peek().children().add(new TextNode(TextType.PLAIN_TEXT, text.strip()));
+                stack
+                    .peek()
+                    .children()
+                    .add(new TextNode(textType(stack.peek().tagName()), text.strip()));
               }
             }
           }
           case XMLStreamConstants.CDATA -> {
             if (!stack.isEmpty()) {
-              stack.peek().children().add(new CDataNode(reader.getText(), Optional.empty()));
+              String raw = reader.getText();
+              stack
+                  .peek()
+                  .children()
+                  .add(new CDataNode(raw, Optional.of(new SqlStatementParser(raw).parse())));
             }
           }
           case XMLStreamConstants.COMMENT -> {
@@ -111,6 +135,10 @@ public final class MapperXmlParser {
           new AttributeNode(reader.getAttributeLocalName(i), reader.getAttributeValue(i)));
     }
     return new ElementBuilder(reader.getLocalName(), attributes, new ArrayList<>());
+  }
+
+  private TextType textType(String tagName) {
+    return SQL_TEXT_TAGS.contains(tagName) ? TextType.SQL : TextType.PLAIN_TEXT;
   }
 
   private record ElementBuilder(

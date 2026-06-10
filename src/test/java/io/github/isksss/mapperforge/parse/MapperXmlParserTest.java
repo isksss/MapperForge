@@ -4,10 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.github.isksss.mapperforge.ast.mapper.CDataNode;
 import io.github.isksss.mapperforge.ast.mapper.GenericElementNode;
 import io.github.isksss.mapperforge.ast.mapper.IfElementNode;
 import io.github.isksss.mapperforge.ast.mapper.MapperElementNode;
 import io.github.isksss.mapperforge.ast.mapper.SelectElementNode;
+import io.github.isksss.mapperforge.ast.mapper.TextNode;
+import io.github.isksss.mapperforge.ast.mapper.TextType;
+import io.github.isksss.mapperforge.ast.sql.UnknownStatement;
 import io.github.isksss.mapperforge.source.SourceFile;
 import org.junit.jupiter.api.Test;
 
@@ -57,5 +61,29 @@ final class MapperXmlParserTest {
   @Test
   void returnsEmptyWhenRootIsNotMapper() {
     assertTrue(parser.parseMapper(new SourceFile("not-mapper.xml", "<root></root>")).isEmpty());
+  }
+
+  @Test
+  void marksSqlTextAndParsesCdataSqlRecoverably() {
+    MapperElementNode mapper =
+        parser
+            .parseMapper(
+                new SourceFile(
+                    "sql.xml",
+                    """
+                    <mapper namespace="sample.Mapper">
+                      <select id="find">select id from users</select>
+                      <select id="unknown"><![CDATA[merge into users using source]]></select>
+                    </mapper>
+                    """))
+            .orElseThrow();
+
+    SelectElementNode select = (SelectElementNode) mapper.children().get(0);
+    TextNode sqlText = (TextNode) select.children().getFirst();
+    assertEquals(TextType.SQL, sqlText.type());
+
+    SelectElementNode unknownSelect = (SelectElementNode) mapper.children().get(1);
+    CDataNode cdata = (CDataNode) unknownSelect.children().getFirst();
+    assertInstanceOf(UnknownStatement.class, cdata.parsed().orElseThrow());
   }
 }
