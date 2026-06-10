@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.isksss.mapperforge.MapperForge;
 import io.github.isksss.mapperforge.config.FormatterConfig;
+import io.github.isksss.mapperforge.config.SqlPrinter;
 import io.github.isksss.mapperforge.source.SourceFile;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -20,7 +21,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
 
 final class GoldenFileTest {
-  private static final Set<String> CUSTOM_CONFIG_GOLDEN_FILES = Set.of("attribute-order");
+  private static final Set<String> CUSTOM_CONFIG_GOLDEN_FILES =
+      Set.of("attribute-order", "ast-sql-printer");
   private final MapperForge mapperForge = new MapperForge();
 
   @TestFactory
@@ -74,6 +76,31 @@ final class GoldenFileTest {
             Map.of("result", List.of("property", "column", "javaType", "jdbcType")));
 
     assertGolden("attribute-order", config);
+  }
+
+  @Test
+  void appliesAstSqlPrinterWhenConfigured() throws IOException {
+    FormatterConfig defaults = FormatterConfig.defaults();
+    FormatterConfig config =
+        new FormatterConfig(
+            defaults.dialect(),
+            defaults.formatterVersion(),
+            defaults.include(),
+            defaults.exclude(),
+            defaults.indentSize(),
+            defaults.maxLineLength(),
+            defaults.lineEnding(),
+            defaults.sqlFormatStyle(),
+            SqlPrinter.AST,
+            defaults.tagWrapStyle(),
+            defaults.attributeLayout(),
+            defaults.preserveWhitespace(),
+            defaults.preserveCdata(),
+            defaults.formatSqlInsideCdata(),
+            defaults.strict(),
+            defaults.attributeOrder());
+
+    assertGolden("ast-sql-printer", config);
   }
 
   @Test

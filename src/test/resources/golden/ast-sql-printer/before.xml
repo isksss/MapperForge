@@ -1,0 +1,1 @@
+<mapper namespace="sample.UserMapper"><select id="findWithOrders" resultType="User">select u.id, u.name from users u left join orders o on o.user_id = u.id where o.total > 0 order by u.id desc limit 10</select><insert id="archive">insert into archived_users (id, name) select id, name from users where active = 0 returning id</insert></mapper>
