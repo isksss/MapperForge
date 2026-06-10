@@ -7,12 +7,24 @@ import io.github.isksss.mapperforge.ast.mapper.GenericElementNode;
 import io.github.isksss.mapperforge.ast.mapper.MapperNode;
 import io.github.isksss.mapperforge.ast.mapper.TextNode;
 import io.github.isksss.mapperforge.ast.mapper.TextType;
+import io.github.isksss.mapperforge.ast.sql.DeleteStatement;
+import io.github.isksss.mapperforge.ast.sql.Expression;
+import io.github.isksss.mapperforge.ast.sql.InsertStatement;
+import io.github.isksss.mapperforge.ast.sql.SelectStatement;
+import io.github.isksss.mapperforge.ast.sql.SetOperationStatement;
+import io.github.isksss.mapperforge.ast.sql.Statement;
+import io.github.isksss.mapperforge.ast.sql.UnknownExpression;
+import io.github.isksss.mapperforge.ast.sql.UnknownStatement;
+import io.github.isksss.mapperforge.ast.sql.UpdateStatement;
+import io.github.isksss.mapperforge.ast.sql.WithStatement;
 import io.github.isksss.mapperforge.config.FormatterConfig;
 import io.github.isksss.mapperforge.parse.MapperXmlParser;
 import io.github.isksss.mapperforge.parse.sql.PlaceholderParser;
+import io.github.isksss.mapperforge.parse.sql.SqlStatementParser;
 import io.github.isksss.mapperforge.source.SourceFile;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,6 +39,7 @@ public final class Validator {
     List<ValidationError> errors = new ArrayList<>();
     compareAst(before, after, errors);
     comparePlaceholders(before.content(), after.content(), errors);
+    compareSqlStatements(before, after, errors);
     return new ValidationResult(errors.isEmpty(), List.copyOf(errors));
   }
 
@@ -54,6 +67,17 @@ public final class Validator {
     }
   }
 
+  private void compareSqlStatements(
+      SourceFile before, SourceFile after, List<ValidationError> errors) {
+    List<Object> beforeStatements = sqlStatementSignatures(parser.parse(before));
+    List<Object> afterStatements = sqlStatementSignatures(parser.parse(after));
+    if (!beforeStatements.equals(afterStatements)) {
+      errors.add(
+          new ValidationError(
+              ErrorType.STATEMENT, "Formatted XML changed SQL statement structure", null));
+    }
+  }
+
   private ErrorType classifyAstChange(String before, String after) {
     if (!find(COMMENT, before).equals(find(COMMENT, after))) {
       return ErrorType.COMMENT;
@@ -75,6 +99,94 @@ public final class Validator {
               element.attributes(),
               element.children().stream().map(this::comparable).toList());
     };
+  }
+
+  private List<Object> sqlStatementSignatures(MapperNode node) {
+    List<Object> statements = new ArrayList<>();
+    collectSqlStatementSignatures(node, statements);
+    return List.copyOf(statements);
+  }
+
+  private void collectSqlStatementSignatures(MapperNode node, List<Object> statements) {
+    switch (node) {
+      case TextNode text when text.type() == TextType.SQL ->
+          statements.add(statementSignature(new SqlStatementParser(text.value()).parse()));
+      case CDataNode cdata ->
+          cdata
+              .parsed()
+              .filter(Statement.class::isInstance)
+              .map(Statement.class::cast)
+              .ifPresent(sql -> statements.add(statementSignature(sql)));
+      case ElementNode element ->
+          element.children().forEach(child -> collectSqlStatementSignatures(child, statements));
+      default -> {}
+    }
+  }
+
+  private Object statementSignature(Statement statement) {
+    return switch (statement) {
+      case SelectStatement select ->
+          List.of(
+              "SELECT",
+              expressions(select.selectItems()),
+              select.from(),
+              expression(select.where()),
+              expressions(select.groupBy()),
+              expression(select.having()),
+              select.orderBy().stream()
+                  .map(order -> List.of(expression(order.expression()), order.direction()))
+                  .toList(),
+              expression(select.limit()),
+              expression(select.offset()),
+              select.joins().stream()
+                  .map(join -> List.of(join.kind(), join.table(), expression(join.on())))
+                  .toList(),
+              select.windows(),
+              List.of(select.fetch().raw(), expression(select.fetch().count())));
+      case InsertStatement insert ->
+          List.of(
+              "INSERT",
+              insert.table(),
+              insert.columns(),
+              expressions(insert.values()),
+              insert.valueRows().stream().map(this::expressions).toList(),
+              statementSignature(insert.selectSource()),
+              expressions(insert.returning()));
+      case UpdateStatement update ->
+          List.of(
+              "UPDATE",
+              update.table(),
+              update.assignments().stream()
+                  .map(assignment -> List.of(assignment.column(), expression(assignment.value())))
+                  .toList(),
+              expression(update.where()));
+      case DeleteStatement delete ->
+          List.of(
+              "DELETE",
+              delete.table(),
+              delete.using(),
+              expression(delete.where()),
+              expressions(delete.returning()));
+      case SetOperationStatement setOperation ->
+          List.of("SET_OPERATION", setOperation.operator(), normalizeSql(setOperation.raw()));
+      case WithStatement with -> List.of("WITH", normalizeSql(with.raw()));
+      case UnknownStatement unknown -> List.of("UNKNOWN", normalizeSql(unknown.raw()));
+    };
+  }
+
+  private List<Object> expressions(List<Expression> expressions) {
+    return expressions.stream().map(this::expression).toList();
+  }
+
+  private Object expression(Expression expression) {
+    if (expression instanceof UnknownExpression unknown) {
+      return List.of("UNKNOWN", normalizeSql(unknown.raw()));
+    }
+    return expression;
+  }
+
+  private String normalizeSql(String raw) {
+    return raw.strip().replaceAll("\\s+", " ").toUpperCase(Locale.ROOT);
   }
 
   private void compare(

@@ -86,4 +86,43 @@ final class ValidatorTest {
 
     assertEquals(ErrorType.PLACEHOLDER, result.errors().getFirst().type());
   }
+
+  @Test
+  void acceptsSqlFormattingOnlyChanges() {
+    SourceFile before =
+        new SourceFile(
+            "before.xml",
+            "<mapper namespace=\"sample\"><select id=\"find\">select id from users where active = 1</select></mapper>");
+    SourceFile after =
+        new SourceFile(
+            "after.xml",
+            """
+            <mapper namespace="sample">
+                <select id="find">
+                    SELECT id
+                    FROM users
+                    WHERE active = 1
+                </select>
+            </mapper>
+            """);
+
+    assertTrue(validator.validate(before, after, FormatterConfig.defaults()).success());
+  }
+
+  @Test
+  void rejectsSqlStatementSemanticChanges() {
+    SourceFile before =
+        new SourceFile(
+            "before.xml",
+            "<mapper namespace=\"sample\"><select id=\"find\">select id from users where active = 1</select></mapper>");
+    SourceFile after =
+        new SourceFile(
+            "after.xml",
+            "<mapper namespace=\"sample\"><select id=\"find\">select id from users where active = 0</select></mapper>");
+
+    ValidationResult result = validator.validate(before, after, FormatterConfig.defaults());
+
+    assertFalse(result.success());
+    assertEquals(ErrorType.STATEMENT, result.errors().getFirst().type());
+  }
 }
