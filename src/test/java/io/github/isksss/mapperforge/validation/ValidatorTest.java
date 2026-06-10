@@ -357,6 +357,37 @@ final class ValidatorTest {
     assertEquals(ErrorCode.VALIDATION_ERROR, result.errors().getFirst().code());
   }
 
+  @Test
+  void reportsOgnlExpressionChangeLocation() {
+    SourceFile before =
+        new SourceFile(
+            "before.xml",
+            """
+            <mapper namespace="sample">
+                <select id="find">
+                    <if test="name!=null">and name = #{name}</if>
+                </select>
+            </mapper>
+            """);
+    SourceFile after =
+        new SourceFile(
+            "after.xml",
+            """
+            <mapper namespace="sample">
+                <select id="find">
+                    <if test="name==null">and name = #{name}</if>
+                </select>
+            </mapper>
+            """);
+
+    ValidationResult result = validator.validate(before, after, FormatterConfig.defaults());
+
+    assertFalse(result.success());
+    assertEquals(ErrorType.EXPRESSION, result.errors().getFirst().type());
+    assertEquals(3, result.errors().getFirst().location().start().line());
+    assertEquals(19, result.errors().getFirst().location().start().column());
+  }
+
   private static FormatterConfig preserveWhitespaceConfig() {
     FormatterConfig defaults = FormatterConfig.defaults();
     return new FormatterConfig(

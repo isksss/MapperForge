@@ -45,6 +45,12 @@ import java.util.regex.Pattern;
 public final class Validator {
   private static final Pattern PLACEHOLDER = Pattern.compile("[$#]\\{[^}]+}");
   private static final Pattern CDATA = Pattern.compile("<!\\[CDATA\\[.*?]]>", Pattern.DOTALL);
+  private static final Pattern XML_ENTITY =
+      Pattern.compile("&(?:amp|lt|gt|quot|apos);", Pattern.CASE_INSENSITIVE);
+  private static final Pattern OGNL_ATTRIBUTE =
+      Pattern.compile(
+          "<([A-Za-z][\\w:-]*)\\b[^>]*\\s(test|value|collection)=\"([^\"]*)\"",
+          Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
   private static final Pattern SQL_ELEMENT =
       Pattern.compile(
           "<(select|insert|update|delete|sql)\\b[^>]*>(.*?)</\\1>",
@@ -105,12 +111,20 @@ public final class Validator {
     var beforeAst = comparable(parser.parse(before), config);
     var afterAst = comparable(parser.parse(after), config);
     if (!beforeAst.equals(afterAst)) {
+      ErrorType type = classifyAstChange(before.content(), after.content(), config);
       errors.add(
           new ValidationError(
-              classifyAstChange(before.content(), after.content(), config),
+              type,
               "Formatted XML changed AST",
-              null));
+              astChangeLocation(type, before.content(), after.content())));
     }
+  }
+
+  private Range astChangeLocation(ErrorType type, String before, String after) {
+    if (type == ErrorType.EXPRESSION) {
+      return firstDifferingOgnlAttributeRange(before, after);
+    }
+    return null;
   }
 
   private void compareSqlStatements(
@@ -397,6 +411,56 @@ public final class Validator {
           new TextMatch(matcher.group(), sourceRange(value, matcher.start(), matcher.end())));
     }
     return matches;
+  }
+
+  private Range firstDifferingOgnlAttributeRange(String before, String after) {
+    List<TextMatch> beforeMatches = ognlAttributeMatches(before);
+    List<TextMatch> afterMatches = ognlAttributeMatches(after);
+    List<Object> beforeExpressions =
+        beforeMatches.stream().map(TextMatch::value).map(this::ognlExpressionSignature).toList();
+    List<Object> afterExpressions =
+        afterMatches.stream().map(TextMatch::value).map(this::ognlExpressionSignature).toList();
+    int differingIndex = firstDifferingIndex(beforeExpressions, afterExpressions);
+    return differingIndex >= 0 && differingIndex < beforeMatches.size()
+        ? beforeMatches.get(differingIndex).range()
+        : null;
+  }
+
+  private List<TextMatch> ognlAttributeMatches(String source) {
+    Matcher matcher = OGNL_ATTRIBUTE.matcher(source);
+    List<TextMatch> matches = new ArrayList<>();
+    while (matcher.find()) {
+      String tagName = matcher.group(1).toLowerCase(Locale.ROOT);
+      String attributeName = matcher.group(2);
+      if (isOgnlAttribute(tagName, attributeName)) {
+        matches.add(
+            new TextMatch(
+                unescapeXmlAttribute(matcher.group(3)),
+                sourceRange(source, matcher.start(3), matcher.end(3))));
+      }
+    }
+    return matches;
+  }
+
+  private String unescapeXmlAttribute(String value) {
+    Matcher matcher = XML_ENTITY.matcher(value);
+    StringBuilder result = new StringBuilder();
+    while (matcher.find()) {
+      matcher.appendReplacement(result, entityValue(matcher.group()));
+    }
+    matcher.appendTail(result);
+    return result.toString();
+  }
+
+  private String entityValue(String entity) {
+    return switch (entity.toLowerCase(Locale.ROOT)) {
+      case "&amp;" -> "&";
+      case "&lt;" -> "<";
+      case "&gt;" -> ">";
+      case "&quot;" -> "\"";
+      case "&apos;" -> "'";
+      default -> entity;
+    };
   }
 
   private List<Range> sqlStatementRanges(String source) {
