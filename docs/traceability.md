@@ -42,6 +42,7 @@ This document maps the main `PLAN.local.md` requirements to implementation and v
 | `mapperForgeDryRun` | `MapperForgePlugin`, `MapperForgeDryRunTask`, functional tests |
 | Task behavior docs | `docs/tasks.md` |
 | Check task cacheability | `MapperForgeCheckTask`, `MapperForgeTaskCacheAnnotationTest` |
+| Check task cache key inputs | `MapperForgeTask` input annotations, `MapperForgeTaskCacheAnnotationTest` |
 | Format/dry-run no cache | `MapperForgeFormatTask`, `MapperForgeDryRunTask`, `MapperForgeTaskCacheAnnotationTest` |
 
 ## Parser And AST

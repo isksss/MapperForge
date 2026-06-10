@@ -36,6 +36,7 @@ Behavior:
 - Writes task state under `build/mapperforge/` for Gradle task tracking.
 
 `mapperForgeCheck` is cacheable.
+Its Gradle cache inputs include the formatter mode, formatter configuration, selected source files, and the task implementation classpath.
 
 ## `mapperForgeDryRun`
 
