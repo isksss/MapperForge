@@ -1,0 +1,1 @@
+<mapper namespace="sample.UserMapper"><select id="setOps" resultType="long">select id from active_users union select id from invited_users intersect select id from allowed_users except select id from banned_users order by id</select></mapper>

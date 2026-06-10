@@ -1,0 +1,17 @@
+<mapper namespace="sample.UserMapper">
+    <select id="setOps" resultType="long">
+        SELECT
+            id
+        FROM active_users
+        UNION
+        SELECT id
+        FROM invited_users
+        INTERSECT
+        SELECT id
+        FROM allowed_users
+        EXCEPT
+        SELECT id
+        FROM banned_users
+        ORDER BY id
+    </select>
+</mapper>
