@@ -1,6 +1,7 @@
 package io.github.isksss.mapperforge.parse.sql;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import io.github.isksss.mapperforge.token.TokenType;
 import java.util.Arrays;
@@ -94,5 +95,17 @@ final class SqlTokenizerTest {
             "IDENTIFIER:users",
             "COMMENT:/* keep filter */"),
         tokens);
+  }
+
+  @Test
+  void returnsImmutableTokensWithEofAtCurrentPosition() {
+    var tokens = new SqlTokenizer("select\nid").tokenize();
+
+    assertEquals(TokenType.EOF, tokens.getLast().type());
+    assertEquals("", tokens.getLast().text());
+    assertEquals(9, tokens.getLast().range().start().offset());
+    assertEquals(2, tokens.getLast().range().start().line());
+    assertEquals(3, tokens.getLast().range().start().column());
+    assertThrows(UnsupportedOperationException.class, () -> tokens.add(tokens.getLast()));
   }
 }

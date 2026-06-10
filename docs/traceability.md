@@ -65,7 +65,7 @@ This document maps the main `PLAN.local.md` requirements to implementation and v
 
 | Requirement | Evidence |
 | --- | --- |
-| SQL tokenizer | `SqlTokenizer`, `SqlTokenizerTest` |
+| SQL tokenizer | `SqlTokenizer`, `SqlTokenizerTest`, `docs/adr/0095-sql-tokenizer-public-contract.md` |
 | Statement parser | `SqlStatementParser`, `SqlStatementParserTest` |
 | Pratt expression parser | `SqlExpressionParser`, `SqlExpressionParserTest` |
 | `SELECT`, DML, `WITH`, set operations | `SqlStatementParserTest`, golden files |

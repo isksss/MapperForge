@@ -9,6 +9,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+/**
+ * SQL 文字列を MapperForge の parser が扱う token 列へ変換する tokenizer です。
+ *
+ * <p>予約語は大文字化し、文字列 literal と識別子は元の表記を保持します。返却する token list は不変です。
+ */
 public final class SqlTokenizer {
   private static final Set<String> KEYWORDS =
       Set.of(
@@ -73,10 +78,22 @@ public final class SqlTokenizer {
   private int line = 1;
   private int column = 1;
 
+  /**
+   * SQL tokenizer を作成します。
+   *
+   * @param sql token 化する SQL 文字列
+   */
   public SqlTokenizer(String sql) {
     this.sql = sql;
   }
 
+  /**
+   * SQL を token 化します。
+   *
+   * <p>戻り値の末尾には常に {@link TokenType#EOF} token を追加します。
+   *
+   * @return 不変 token list
+   */
   public List<Token> tokenize() {
     List<Token> tokens = new ArrayList<>();
     while (!isAtEnd()) {
