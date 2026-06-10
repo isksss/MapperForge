@@ -3,8 +3,12 @@ package io.github.isksss.mapperforge.parse.sql;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
+import io.github.isksss.mapperforge.ast.sql.BinaryExpression;
+import io.github.isksss.mapperforge.ast.sql.ColumnExpression;
 import io.github.isksss.mapperforge.ast.sql.DeleteStatement;
+import io.github.isksss.mapperforge.ast.sql.FunctionExpression;
 import io.github.isksss.mapperforge.ast.sql.InsertStatement;
+import io.github.isksss.mapperforge.ast.sql.PlaceholderExpression;
 import io.github.isksss.mapperforge.ast.sql.SelectStatement;
 import io.github.isksss.mapperforge.ast.sql.SetOperationStatement;
 import io.github.isksss.mapperforge.ast.sql.Statement;
@@ -31,6 +35,25 @@ final class SqlStatementParserTest {
         (SetOperationStatement) parse("select id from a intersect select id from b");
 
     assertEquals("INTERSECT", statement.operator());
+  }
+
+  @Test
+  void parsesSelectListFromAndWhereExpressions() {
+    SelectStatement statement =
+        (SelectStatement)
+            parse(
+                "select id, coalesce(name, #{fallback}) from users where id = #{id} and active = 1");
+
+    assertEquals("users", statement.from());
+    assertEquals(2, statement.selectItems().size());
+    assertInstanceOf(ColumnExpression.class, statement.selectItems().get(0));
+    assertInstanceOf(FunctionExpression.class, statement.selectItems().get(1));
+
+    BinaryExpression where = assertInstanceOf(BinaryExpression.class, statement.where());
+    assertEquals("AND", where.operator());
+    BinaryExpression left = assertInstanceOf(BinaryExpression.class, where.left());
+    assertEquals("=", left.operator());
+    assertInstanceOf(PlaceholderExpression.class, left.right());
   }
 
   @Test
