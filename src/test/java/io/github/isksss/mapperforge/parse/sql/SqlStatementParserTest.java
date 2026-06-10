@@ -217,6 +217,30 @@ final class SqlStatementParserTest {
     assertEquals("`user`.`id`", ((ColumnExpression) where.left()).name());
   }
 
+  @Test
+  void stripsOuterWhitespaceAndIgnoresCommentsForStatementClassification() {
+    SelectStatement statement =
+        (SelectStatement)
+            parse(
+                """
+
+                -- leading comment
+                select id from users /* trailing comment */
+                """);
+
+    assertEquals(
+        "-- leading comment\nselect id from users /* trailing comment */", statement.raw());
+    assertEquals("users", statement.from());
+    assertEquals(1, statement.selectItems().size());
+  }
+
+  @Test
+  void blankSqlFallsBackToUnknownStatementWithStrippedRawSql() {
+    UnknownStatement statement = (UnknownStatement) parse(" \n\t ");
+
+    assertEquals("", statement.raw());
+  }
+
   private Statement parse(String sql) {
     return new SqlStatementParser(sql).parse();
   }

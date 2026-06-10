@@ -16,17 +16,32 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * SQL 文字列を statement AST へ変換する parser です。
+ *
+ * <p>外側の空白は取り除き、SQL コメントは構文判定から除外します。未対応構文は例外ではなく {@link UnknownStatement} として返します。
+ */
 public final class SqlStatementParser {
   private static final Set<String> SET_OPERATORS = Set.of("UNION", "INTERSECT", "EXCEPT");
 
   private final String sql;
   private final List<Token> tokens;
 
+  /**
+   * SQL statement parser を作成します。
+   *
+   * @param sql 解析する SQL 文字列
+   */
   public SqlStatementParser(String sql) {
     this.sql = sql.strip();
     this.tokens = withoutComments(new SqlTokenizer(this.sql).tokenize());
   }
 
+  /**
+   * SQL statement を解析します。
+   *
+   * @return 解析結果の statement。未対応構文の場合は {@link UnknownStatement}
+   */
   public Statement parse() {
     Token first = firstSignificantToken();
     if (first.type() != TokenType.KEYWORD) {
