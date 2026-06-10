@@ -1,0 +1,12 @@
+<mapper namespace="sample.UserMapper">
+    <select id="search" resultType="User">
+        <where>
+            <if test="not (name == null || admin)">
+                AND name = #{name}
+            </if>
+            <if test="enabled ? name != null : admin">
+                AND enabled = true
+            </if>
+        </where>
+    </select>
+</mapper>

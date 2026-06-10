@@ -1,12 +1,20 @@
 package io.github.isksss.mapperforge.format;
 
+import io.github.isksss.mapperforge.ast.ognl.OgnlUnknownExpression;
+import io.github.isksss.mapperforge.parse.ognl.OgnlExpressionParser;
+import io.github.isksss.mapperforge.print.OgnlAstPrinter;
 import java.util.Set;
 
 public final class OgnlFormatter {
   private static final Set<String> WORD_OPERATORS = Set.of("and", "or", "in", "instanceof");
   private static final Set<String> PREFIX_WORD_OPERATORS = Set.of("not");
+  private final OgnlAstPrinter printer = new OgnlAstPrinter();
 
   public String format(String expression) {
+    var parsed = new OgnlExpressionParser(expression).parse();
+    if (!(parsed instanceof OgnlUnknownExpression)) {
+      return printer.print(parsed);
+    }
     return join(tokenize(expression));
   }
 
@@ -24,7 +32,7 @@ public final class OgnlFormatter {
       } else if (startsWithAny(expression, index, "&&", "||", "==", "!=", ">=", "<=")) {
         tokens.add(expression.substring(index, index + 2));
         index += 2;
-      } else if (current == '>' || current == '<') {
+      } else if (current == '>' || current == '<' || current == '?' || current == ':') {
         tokens.add(String.valueOf(current));
         index++;
       } else {
@@ -62,7 +70,7 @@ public final class OgnlFormatter {
 
   private boolean isSymbolOperator(String token) {
     return switch (token) {
-      case "&&", "||", "==", "!=", ">=", "<=", ">", "<" -> true;
+      case "&&", "||", "==", "!=", ">=", "<=", ">", "<", "?", ":" -> true;
       default -> false;
     };
   }
@@ -101,6 +109,8 @@ public final class OgnlFormatter {
           || current == '"'
           || current == '>'
           || current == '<'
+          || current == '?'
+          || current == ':'
           || startsWithAny(expression, index, "&&", "||", "==", "!=", ">=", "<=")) {
         break;
       }

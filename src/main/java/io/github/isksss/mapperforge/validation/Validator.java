@@ -26,6 +26,7 @@ import io.github.isksss.mapperforge.ast.sql.UnknownStatement;
 import io.github.isksss.mapperforge.ast.sql.UpdateStatement;
 import io.github.isksss.mapperforge.ast.sql.WithStatement;
 import io.github.isksss.mapperforge.config.FormatterConfig;
+import io.github.isksss.mapperforge.format.OgnlFormatter;
 import io.github.isksss.mapperforge.parse.MapperXmlParser;
 import io.github.isksss.mapperforge.parse.ognl.OgnlExpressionParser;
 import io.github.isksss.mapperforge.parse.sql.PlaceholderParser;
@@ -43,6 +44,7 @@ public final class Validator {
   private static final Pattern CDATA = Pattern.compile("<!\\[CDATA\\[.*?]]>", Pattern.DOTALL);
   private final MapperXmlParser parser = new MapperXmlParser();
   private final PlaceholderParser placeholderParser = new PlaceholderParser();
+  private final OgnlFormatter ognlFormatter = new OgnlFormatter();
 
   public ValidationResult validate(SourceFile before, SourceFile after, FormatterConfig config) {
     List<ValidationError> errors = new ArrayList<>();
@@ -266,7 +268,7 @@ public final class Validator {
   }
 
   private String normalizeOgnl(String raw) {
-    return raw.strip().replaceAll("\\s+", " ");
+    return ognlFormatter.format(raw);
   }
 
   private String normalizeSql(String raw) {

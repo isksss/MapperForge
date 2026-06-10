@@ -42,7 +42,11 @@ public final class OgnlExpressionParser {
 
   public OgnlExpression parse() {
     try {
-      return parseExpression(0);
+      OgnlExpression parsed = parseExpression(0);
+      if (!isAtEnd()) {
+        return new OgnlUnknownExpression(expression);
+      }
+      return parsed;
     } catch (RuntimeException e) {
       return new OgnlUnknownExpression(expression);
     }

@@ -21,4 +21,15 @@ final class OgnlFormatterTest {
         formatter.format(
             "not user.disabled&&user.profile.name!=null&&helper.allowed(user.id)||user instanceof AdminUser"));
   }
+
+  @Test
+  void preservesRequiredParenthesesWhenFormattingThroughAst() {
+    assertEquals("not (name == null || admin)", formatter.format("not (name==null||admin)"));
+  }
+
+  @Test
+  void fallsBackToLegacyFormattingForUnsupportedOgnl() {
+    assertEquals(
+        "enabled ? name != null : admin", formatter.format("enabled ? name!=null : admin"));
+  }
 }
