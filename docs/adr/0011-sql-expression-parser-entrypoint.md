@@ -17,9 +17,12 @@ PLAN.local.md では SQL Expression Parser に Pratt Parser を採用し、`Lite
 - 二項演算子は precedence table で処理する。
 - `BETWEEN` と `IN` は SQL 固有の infix expression として扱う。
 - `CASE`、`CAST`、`ARRAY`、`ROW`、`EXISTS` は prefix/special form として扱う。
+- 括弧内 `SELECT`/`WITH` は `SubQueryExpression` として扱う。
+- PostgreSQL 系 JSON operator の `->`、`->>`、`#>`、`#>>` は postfix expression として扱う。
+- `OVER (...)` は直前の expression を `WindowExpression` で包む。
 - MyBatis placeholder は既存の `PlaceholderParser` を再利用する。
 - 解析できない構文は例外を外へ出さず `UnknownExpression` へ退避する。
 
 ## Consequences
 
-SQL expression の比較・printer・validator を段階的に強化するための AST 入口ができる。一方で、現時点では full SQL grammar ではなく recoverable subset である。JSON/window/subquery などの高度な構文は型だけを先に用意し、利用箇所と golden file test を追加しながら拡張する。
+SQL expression の比較・printer・validator を段階的に強化するための AST 入口ができる。一方で、現時点では full SQL grammar ではなく recoverable subset である。方言固有構文や複雑な nested query は、利用箇所と golden file test を追加しながら拡張する。

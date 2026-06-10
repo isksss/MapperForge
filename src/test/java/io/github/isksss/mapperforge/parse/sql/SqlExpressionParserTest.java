@@ -13,10 +13,13 @@ import io.github.isksss.mapperforge.ast.sql.ExistsExpression;
 import io.github.isksss.mapperforge.ast.sql.Expression;
 import io.github.isksss.mapperforge.ast.sql.FunctionExpression;
 import io.github.isksss.mapperforge.ast.sql.InExpression;
+import io.github.isksss.mapperforge.ast.sql.JsonExpression;
 import io.github.isksss.mapperforge.ast.sql.LiteralExpression;
 import io.github.isksss.mapperforge.ast.sql.PlaceholderExpression;
 import io.github.isksss.mapperforge.ast.sql.RowExpression;
+import io.github.isksss.mapperforge.ast.sql.SubQueryExpression;
 import io.github.isksss.mapperforge.ast.sql.UnaryExpression;
+import io.github.isksss.mapperforge.ast.sql.WindowExpression;
 import org.junit.jupiter.api.Test;
 
 final class SqlExpressionParserTest {
@@ -90,6 +93,26 @@ final class SqlExpressionParserTest {
     ExistsExpression exists =
         assertInstanceOf(ExistsExpression.class, parse("exists (select 1 from users)"));
     assertEquals("select 1 from users", exists.subQuery());
+  }
+
+  @Test
+  void parsesSubQueryJsonAndWindowExpressions() {
+    SubQueryExpression subQuery =
+        assertInstanceOf(SubQueryExpression.class, parse("(select id from users)"));
+    assertEquals("select id from users", subQuery.sql());
+
+    JsonExpression json = assertInstanceOf(JsonExpression.class, parse("payload ->> 'name'"));
+    assertColumn("payload", json.expression());
+    assertEquals("->>", json.operator());
+    assertLiteral("name", json.path());
+
+    WindowExpression window =
+        assertInstanceOf(
+            WindowExpression.class,
+            parse("count(*) over (partition by tenant_id order by created_at)"));
+    FunctionExpression function = assertInstanceOf(FunctionExpression.class, window.expression());
+    assertEquals("count", function.name());
+    assertEquals("partition by tenant_id order by created_at", window.windowSpec());
   }
 
   private static Expression parse(String sql) {

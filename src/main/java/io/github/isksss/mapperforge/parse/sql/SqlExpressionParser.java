@@ -10,10 +10,13 @@ import io.github.isksss.mapperforge.ast.sql.ExistsExpression;
 import io.github.isksss.mapperforge.ast.sql.Expression;
 import io.github.isksss.mapperforge.ast.sql.FunctionExpression;
 import io.github.isksss.mapperforge.ast.sql.InExpression;
+import io.github.isksss.mapperforge.ast.sql.JsonExpression;
 import io.github.isksss.mapperforge.ast.sql.LiteralExpression;
 import io.github.isksss.mapperforge.ast.sql.RowExpression;
+import io.github.isksss.mapperforge.ast.sql.SubQueryExpression;
 import io.github.isksss.mapperforge.ast.sql.UnaryExpression;
 import io.github.isksss.mapperforge.ast.sql.UnknownExpression;
+import io.github.isksss.mapperforge.ast.sql.WindowExpression;
 import io.github.isksss.mapperforge.token.Token;
 import io.github.isksss.mapperforge.token.TokenType;
 import java.util.ArrayList;
@@ -72,6 +75,16 @@ public final class SqlExpressionParser {
         left = new InExpression(left, parseParenthesizedExpressionList());
         continue;
       }
+      if (matchKeyword("OVER")) {
+        left = new WindowExpression(left, parseParenthesizedRaw());
+        continue;
+      }
+      String jsonOperator = peekJsonOperator();
+      if (!jsonOperator.isEmpty()) {
+        advanceJsonOperator(jsonOperator);
+        left = new JsonExpression(left, jsonOperator, parseExpression(60));
+        continue;
+      }
       String operator = peekOperator();
       int precedence = PRECEDENCE.getOrDefault(operator, -1);
       if (precedence < minPrecedence) {
@@ -104,9 +117,15 @@ public final class SqlExpressionParser {
       return new RowExpression(parseParenthesizedExpressionList());
     }
     if (matchSymbol("(")) {
+      if (checkKeyword("SELECT") || checkKeyword("WITH")) {
+        return new SubQueryExpression(readRawUntilClosingParen());
+      }
       Expression expression = parseExpression(0);
       consumeSymbol(")");
       return expression;
+    }
+    if (matchSymbol("*")) {
+      return new ColumnExpression("*");
     }
     if (match(TokenType.PLACEHOLDER)) {
       return new PlaceholderParser().parse(previous().text());
@@ -182,6 +201,10 @@ public final class SqlExpressionParser {
 
   private String parseParenthesizedRaw() {
     consumeSymbol("(");
+    return readRawUntilClosingParen();
+  }
+
+  private String readRawUntilClosingParen() {
     int depth = 1;
     int startOffset = peek().range().start().offset();
     int endOffset = startOffset;
@@ -198,6 +221,32 @@ public final class SqlExpressionParser {
       }
     }
     return sql.substring(startOffset, endOffset).strip();
+  }
+
+  private String peekJsonOperator() {
+    if (!check(TokenType.SYMBOL)) {
+      return "";
+    }
+    String first = peek().text();
+    if (!("-".equals(first) || "#".equals(first)) || current + 1 >= tokens.size()) {
+      return "";
+    }
+    String second = tokens.get(current + 1).text();
+    if (!">".equals(second)) {
+      return "";
+    }
+    if (current + 2 < tokens.size() && ">".equals(tokens.get(current + 2).text())) {
+      return first + ">>";
+    }
+    return first + ">";
+  }
+
+  private void advanceJsonOperator(String operator) {
+    advance();
+    advance();
+    if (operator.length() == 3) {
+      advance();
+    }
   }
 
   private String peekOperator() {
@@ -263,6 +312,10 @@ public final class SqlExpressionParser {
 
   private boolean check(TokenType type) {
     return !isAtEnd() && peek().type() == type;
+  }
+
+  private boolean checkKeyword(String keyword) {
+    return check(TokenType.KEYWORD) && keyword.equals(peek().text());
   }
 
   private boolean checkSymbol(String symbol) {
