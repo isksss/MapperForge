@@ -123,5 +123,6 @@ This document maps the main `PLAN.local.md` requirements to implementation and v
 | --- | --- |
 | JUnit tests | `src/test/java` |
 | Dockerized PostgreSQL/MySQL MyBatis tests | `MybatisDatabaseIntegrationTest`, `integrationTest` task |
+| PostgreSQL/MySQL dialect-specific integration | `MybatisDatabaseIntegrationTest` |
 | Spotless integration | `build.gradle.kts`, `spotlessApply`, `spotlessCheck` |
 | Release checklist | `docs/release.md` |

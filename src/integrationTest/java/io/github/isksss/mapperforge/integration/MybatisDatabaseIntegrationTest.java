@@ -3,6 +3,7 @@ package io.github.isksss.mapperforge.integration;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.github.isksss.mapperforge.MapperForge;
+import io.github.isksss.mapperforge.config.Dialect;
 import io.github.isksss.mapperforge.config.FormatterConfig;
 import io.github.isksss.mapperforge.config.SqlPrinter;
 import io.github.isksss.mapperforge.source.SourceFile;
@@ -43,7 +44,7 @@ final class MybatisDatabaseIntegrationTest {
         "create table users (id bigint primary key, name varchar(100) not null, email varchar(200) not null, deleted boolean not null)",
         "golden/mybatis-db/before.xml",
         "golden/mybatis-db/after.xml",
-        FormatterConfig.defaults());
+        config(Dialect.POSTGRESQL, SqlPrinter.LEGACY));
   }
 
   @Test
@@ -54,7 +55,7 @@ final class MybatisDatabaseIntegrationTest {
         "create table users (id bigint primary key, name varchar(100) not null, email varchar(200) not null, deleted boolean not null)",
         "golden/mybatis-db/before.xml",
         "golden/mybatis-db/after.xml",
-        FormatterConfig.defaults());
+        config(Dialect.MYSQL, SqlPrinter.LEGACY));
   }
 
   @Test
@@ -65,7 +66,7 @@ final class MybatisDatabaseIntegrationTest {
         "create table users (id bigint primary key, name varchar(100) not null, email varchar(200) not null, deleted boolean not null)",
         "golden/mybatis-db-ast/before.xml",
         "golden/mybatis-db-ast/after.xml",
-        config(SqlPrinter.AST));
+        config(Dialect.POSTGRESQL, SqlPrinter.AST));
   }
 
   @Test
@@ -76,7 +77,7 @@ final class MybatisDatabaseIntegrationTest {
         "create table users (id bigint primary key, name varchar(100) not null, email varchar(200) not null, deleted boolean not null)",
         "golden/mybatis-db-ast/before.xml",
         "golden/mybatis-db-ast/after.xml",
-        config(SqlPrinter.AST));
+        config(Dialect.MYSQL, SqlPrinter.AST));
   }
 
   private void assertFormattedMapperRuns(
@@ -105,10 +106,10 @@ final class MybatisDatabaseIntegrationTest {
     }
   }
 
-  private FormatterConfig config(SqlPrinter sqlPrinter) {
+  private FormatterConfig config(Dialect dialect, SqlPrinter sqlPrinter) {
     FormatterConfig defaults = FormatterConfig.defaults();
     return new FormatterConfig(
-        defaults.dialect(),
+        dialect,
         defaults.formatterVersion(),
         defaults.include(),
         defaults.exclude(),
