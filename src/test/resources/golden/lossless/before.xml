@@ -1,0 +1,1 @@
+<mapper namespace="sample.UserMapper"><!-- keep me --><select id="find"><![CDATA[select * from users where note = '${note}']]></select><unknown value="#{value}">text</unknown></mapper>

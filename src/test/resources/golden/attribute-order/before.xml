@@ -1,0 +1,1 @@
+<mapper namespace="sample.UserMapper"><resultMap type="User" id="user"><result jdbcType="BIGINT" column="id" property="id"/></resultMap></mapper>

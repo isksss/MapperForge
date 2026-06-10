@@ -1,0 +1,1 @@
+<mapper namespace="sample.UserMapper"><select id="find" resultType="User">select id, name from users where id = #{id}<if test="name!=null&amp;&amp;name!=''">and name = #{name}</if></select></mapper>
