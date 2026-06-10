@@ -7,9 +7,7 @@ public final class MapperForgePlugin implements Plugin<Project> {
   @Override
   public void apply(Project project) {
     MapperForgeExtension extension =
-        project
-            .getExtensions()
-            .create("mapperForge", MapperForgeExtension.class, project.getObjects());
+        project.getExtensions().create("mapperForge", MapperForgeExtension.class);
 
     project
         .getTasks()

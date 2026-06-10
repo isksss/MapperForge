@@ -16,6 +16,7 @@ java {
 dependencies {
     implementation("com.fasterxml.woodstox:woodstox-core:7.1.1")
     implementation("org.slf4j:slf4j-api:2.0.17")
+    implementation("org.snakeyaml:snakeyaml-engine:3.0.1")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.14.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

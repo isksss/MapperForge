@@ -57,6 +57,47 @@ final class MapperForgePluginFunctionalTest {
     assertTrue(result.getOutput().contains("MapperForge check failed"));
   }
 
+  @Test
+  void yamlConfigProvidesDefaultsAndGradleDslOverridesIt() throws IOException {
+    Files.writeString(
+        projectDir.resolve("mapperforge.yml"),
+        """
+        include:
+          - custom/**/*.xml
+        indentSize: 2
+        """,
+        StandardCharsets.UTF_8);
+    Files.writeString(
+        projectDir.resolve("settings.gradle.kts"), "rootProject.name = \"fixture\"\n");
+    Files.writeString(
+        projectDir.resolve("build.gradle.kts"),
+        """
+        plugins {
+            id("io.github.isksss.mapperforge")
+        }
+
+        mapperForge {
+            indentSize = 6
+        }
+        """,
+        StandardCharsets.UTF_8);
+    Path mapper = projectDir.resolve("custom/sample/UserMapper.xml");
+    Files.createDirectories(mapper.getParent());
+    Files.writeString(
+        mapper,
+        "<mapper namespace=\"sample.UserMapper\"><select id=\"find\">select id from users</select></mapper>",
+        StandardCharsets.UTF_8);
+
+    GradleRunner.create()
+        .withProjectDir(projectDir.toFile())
+        .withPluginClasspath()
+        .withArguments("mapperForgeFormat")
+        .build();
+
+    String formatted = Files.readString(mapper, StandardCharsets.UTF_8);
+    assertTrue(formatted.contains("\n      <select"));
+  }
+
   private void writeProject() throws IOException {
     Files.writeString(
         projectDir.resolve("settings.gradle.kts"),

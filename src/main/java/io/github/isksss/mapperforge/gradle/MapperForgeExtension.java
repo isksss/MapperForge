@@ -3,7 +3,6 @@ package io.github.isksss.mapperforge.gradle;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
@@ -39,26 +38,9 @@ public abstract class MapperForgeExtension {
 
   public abstract MapProperty<String, List<String>> getAttributeOrder();
 
-  public MapperForgeExtension(ObjectFactory objects) {
-    getDialect().convention("POSTGRESQL");
-    getFormatterVersion().convention("1.0.0");
-    getInclude().convention(List.of("src/main/resources/**/*.xml"));
-    getExclude().convention(List.of());
-    getIndentSize().convention(4);
-    getMaxLineLength().convention(100);
-    getLineEnding().convention("\n");
-    getSqlFormatStyle().convention("MULTI_LINE");
-    getTagWrapStyle().convention("AUTO");
-    getAttributeLayout().convention("COMPACT");
-    getPreserveWhitespace().convention(false);
-    getPreserveCdata().convention(true);
-    getFormatSqlInsideCdata().convention(false);
-    getStrict().convention(true);
-    getAttributeOrder().convention(new LinkedHashMap<>());
-  }
-
   public void attributeOrder(String tagName, List<String> order) {
-    Map<String, List<String>> current = new LinkedHashMap<>(getAttributeOrder().get());
+    Map<String, List<String>> current =
+        new LinkedHashMap<>(getAttributeOrder().getOrElse(Map.of()));
     current.put(tagName, List.copyOf(order));
     getAttributeOrder().set(current);
   }

@@ -2,6 +2,7 @@ package io.github.isksss.mapperforge.gradle;
 
 import io.github.isksss.mapperforge.MapperForge;
 import io.github.isksss.mapperforge.config.AttributeLayout;
+import io.github.isksss.mapperforge.config.ConfigLoader;
 import io.github.isksss.mapperforge.config.Dialect;
 import io.github.isksss.mapperforge.config.FormatterConfig;
 import io.github.isksss.mapperforge.config.SqlFormatStyle;
@@ -16,6 +17,7 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
@@ -103,35 +105,33 @@ public abstract class MapperForgeTask extends DefaultTask {
   }
 
   public void configureFrom(Project project, MapperForgeExtension extension) {
-    getDialect().set(extension.getDialect());
-    getFormatterVersion().set(extension.getFormatterVersion());
-    getInclude().set(extension.getInclude());
-    getExclude().set(extension.getExclude());
-    getIndentSize().set(extension.getIndentSize());
-    getMaxLineLength().set(extension.getMaxLineLength());
-    getLineEnding().set(extension.getLineEnding());
-    getSqlFormatStyle().set(extension.getSqlFormatStyle());
-    getTagWrapStyle().set(extension.getTagWrapStyle());
-    getAttributeLayout().set(extension.getAttributeLayout());
-    getPreserveWhitespace().set(extension.getPreserveWhitespace());
-    getPreserveCdata().set(extension.getPreserveCdata());
-    getFormatSqlInsideCdata().set(extension.getFormatSqlInsideCdata());
-    getStrict().set(extension.getStrict());
-    getAttributeOrder().set(extension.getAttributeOrder());
+    FormatterConfig yamlConfig = new ConfigLoader().load(project.file("mapperforge.yml").toPath());
 
-    sourceFiles.setFrom(
-        project.provider(
-            () ->
-                project.fileTree(
-                    project.getProjectDir(),
-                    spec -> {
-                      for (String include : getInclude().get()) {
-                        spec.include(include);
-                      }
-                      for (String exclude : getExclude().get()) {
-                        spec.exclude(exclude);
-                      }
-                    })));
+    getDialect().set(extension.getDialect().orElse(yamlConfig.dialect().name()));
+    getFormatterVersion()
+        .set(extension.getFormatterVersion().orElse(yamlConfig.formatterVersion()));
+    getInclude().set(extension.getInclude().orElse(yamlConfig.include()));
+    getExclude().set(extension.getExclude().orElse(yamlConfig.exclude()));
+    getIndentSize().set(extension.getIndentSize().orElse(yamlConfig.indentSize()));
+    getMaxLineLength().set(extension.getMaxLineLength().orElse(yamlConfig.maxLineLength()));
+    getLineEnding().set(extension.getLineEnding().orElse(yamlConfig.lineEnding()));
+    getSqlFormatStyle()
+        .set(extension.getSqlFormatStyle().orElse(yamlConfig.sqlFormatStyle().name()));
+    getTagWrapStyle().set(extension.getTagWrapStyle().orElse(yamlConfig.tagWrapStyle().name()));
+    getAttributeLayout()
+        .set(extension.getAttributeLayout().orElse(yamlConfig.attributeLayout().name()));
+    getPreserveWhitespace()
+        .set(extension.getPreserveWhitespace().orElse(yamlConfig.preserveWhitespace()));
+    getPreserveCdata().set(extension.getPreserveCdata().orElse(yamlConfig.preserveCdata()));
+    getFormatSqlInsideCdata()
+        .set(extension.getFormatSqlInsideCdata().orElse(yamlConfig.formatSqlInsideCdata()));
+    getStrict().set(extension.getStrict().orElse(yamlConfig.strict()));
+    getAttributeOrder().set(extension.getAttributeOrder().orElse(yamlConfig.attributeOrder()));
+
+    ConfigurableFileTree fileTree = project.fileTree(project.getProjectDir());
+    fileTree.include(getInclude().get());
+    fileTree.exclude(getExclude().get());
+    sourceFiles.setFrom(fileTree);
   }
 
   @TaskAction
@@ -139,7 +139,7 @@ public abstract class MapperForgeTask extends DefaultTask {
     FormatterConfig config = config();
     boolean failed = false;
     for (var file : sourceFiles.getFiles()) {
-      if (!file.isFile() || !isMapperXml(file.toPath())) {
+      if (!file.isFile() || !file.getName().endsWith(".xml") || !isMapperXml(file.toPath())) {
         continue;
       }
       try {
