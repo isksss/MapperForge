@@ -1,0 +1,25 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+    namespace="io.github.isksss.mapperforge.integration.MybatisDatabaseIntegrationTest$UserMapper">
+    <resultMap
+        id="userResultMap"
+        type="io.github.isksss.mapperforge.integration.MybatisDatabaseIntegrationTest$UserRow">
+        <id property="id" column="id"></id>
+        <result property="name" column="name"></result>
+        <result property="email" column="email"></result>
+    </resultMap>
+    <insert id="insertUser">
+        INSERT INTO users (id, name, email, deleted)
+        VALUES
+            (#{id}, #{name}, #{email}, false)
+    </insert>
+    <select id="findUsers" resultMap="userResultMap">
+        SELECT
+            id,
+            name,
+            email
+        FROM users
+        WHERE deleted = false AND name = #{name}
+        ORDER BY id
+    </select>
+</mapper>

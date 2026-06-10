@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.github.isksss.mapperforge.MapperForge;
 import io.github.isksss.mapperforge.config.FormatterConfig;
+import io.github.isksss.mapperforge.config.SqlPrinter;
 import io.github.isksss.mapperforge.source.SourceFile;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -39,7 +40,10 @@ final class MybatisDatabaseIntegrationTest {
     assertFormattedMapperRuns(
         POSTGRESQL,
         "org.postgresql.Driver",
-        "create table users (id bigint primary key, name varchar(100) not null, email varchar(200) not null, deleted boolean not null)");
+        "create table users (id bigint primary key, name varchar(100) not null, email varchar(200) not null, deleted boolean not null)",
+        "golden/mybatis-db/before.xml",
+        "golden/mybatis-db/after.xml",
+        FormatterConfig.defaults());
   }
 
   @Test
@@ -47,17 +51,45 @@ final class MybatisDatabaseIntegrationTest {
     assertFormattedMapperRuns(
         MYSQL,
         "com.mysql.cj.jdbc.Driver",
-        "create table users (id bigint primary key, name varchar(100) not null, email varchar(200) not null, deleted boolean not null)");
+        "create table users (id bigint primary key, name varchar(100) not null, email varchar(200) not null, deleted boolean not null)",
+        "golden/mybatis-db/before.xml",
+        "golden/mybatis-db/after.xml",
+        FormatterConfig.defaults());
+  }
+
+  @Test
+  void astSqlPrinterMapperRunsAgainstPostgresql() throws IOException {
+    assertFormattedMapperRuns(
+        POSTGRESQL,
+        "org.postgresql.Driver",
+        "create table users (id bigint primary key, name varchar(100) not null, email varchar(200) not null, deleted boolean not null)",
+        "golden/mybatis-db-ast/before.xml",
+        "golden/mybatis-db-ast/after.xml",
+        config(SqlPrinter.AST));
+  }
+
+  @Test
+  void astSqlPrinterMapperRunsAgainstMysql() throws IOException {
+    assertFormattedMapperRuns(
+        MYSQL,
+        "com.mysql.cj.jdbc.Driver",
+        "create table users (id bigint primary key, name varchar(100) not null, email varchar(200) not null, deleted boolean not null)",
+        "golden/mybatis-db-ast/before.xml",
+        "golden/mybatis-db-ast/after.xml",
+        config(SqlPrinter.AST));
   }
 
   private void assertFormattedMapperRuns(
-      JdbcDatabaseContainer<?> container, String driverClassName, String createTableSql)
+      JdbcDatabaseContainer<?> container,
+      String driverClassName,
+      String createTableSql,
+      String beforeResource,
+      String afterResource,
+      FormatterConfig config)
       throws IOException {
-    String before = resource("golden/mybatis-db/before.xml");
-    String expected = resource("golden/mybatis-db/after.xml");
-    String formatted =
-        new MapperForge()
-            .format(new SourceFile("UserMapper.xml", before), FormatterConfig.defaults());
+    String before = resource(beforeResource);
+    String expected = resource(afterResource);
+    String formatted = new MapperForge().format(new SourceFile("UserMapper.xml", before), config);
     assertEquals(expected, formatted);
 
     SqlSessionFactory sqlSessionFactory =
@@ -71,6 +103,27 @@ final class MybatisDatabaseIntegrationTest {
           List.of(new UserRow(1L, "Alice", "alice@example.test")),
           mapper.findUsers(List.of(1L, 2L), "Alice"));
     }
+  }
+
+  private FormatterConfig config(SqlPrinter sqlPrinter) {
+    FormatterConfig defaults = FormatterConfig.defaults();
+    return new FormatterConfig(
+        defaults.dialect(),
+        defaults.formatterVersion(),
+        defaults.include(),
+        defaults.exclude(),
+        defaults.indentSize(),
+        defaults.maxLineLength(),
+        defaults.lineEnding(),
+        defaults.sqlFormatStyle(),
+        sqlPrinter,
+        defaults.tagWrapStyle(),
+        defaults.attributeLayout(),
+        defaults.preserveWhitespace(),
+        defaults.preserveCdata(),
+        defaults.formatSqlInsideCdata(),
+        defaults.strict(),
+        defaults.attributeOrder());
   }
 
   private SqlSessionFactory sqlSessionFactory(
@@ -98,7 +151,9 @@ final class MybatisDatabaseIntegrationTest {
 
     SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(configuration);
     try (var session = sqlSessionFactory.openSession(true)) {
-      session.getConnection().createStatement().execute(createTableSql);
+      var statement = session.getConnection().createStatement();
+      statement.execute("drop table if exists users");
+      statement.execute(createTableSql);
     } catch (Exception e) {
       throw new IllegalStateException("Failed to initialize integration database", e);
     }
