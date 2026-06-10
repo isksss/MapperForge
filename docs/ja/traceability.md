@@ -82,7 +82,7 @@
 | OGNL tokenizer/parser | `OgnlTokenizer`, `OgnlExpressionParser`, `OgnlExpressionParserTest` |
 | Operators and method/property access | `OgnlExpressionParserTest`, `OgnlFormatterTest`, `OgnlAstPrinterTest`, golden files |
 | OGNL formatter | `OgnlFormatter`, `OgnlFormatterTest`, dynamic attribute golden files, `docs/ja/adr/0099-ognl-formatter-public-contract.md` |
-| OGNL AST printer | `OgnlAstPrinter`, `OgnlAstPrinterTest` |
+| OGNL AST printer | `OgnlAstPrinter`, `OgnlAstPrinterTest`, `docs/ja/adr/0100-ognl-ast-printer-public-contract.md` |
 | Unknown recovery | `OgnlUnknownExpression`, `OgnlExpressionParserTest` |
 
 ## Formatting

@@ -2,7 +2,9 @@ package io.github.isksss.mapperforge.print;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import io.github.isksss.mapperforge.ast.ognl.OgnlCollectionExpression;
 import io.github.isksss.mapperforge.parse.ognl.OgnlExpressionParser;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 final class OgnlAstPrinterTest {
@@ -27,7 +29,23 @@ final class OgnlAstPrinterTest {
         print("helper.allowed(user.id,status)&&user instanceof AdminUser"));
   }
 
+  @Test
+  void printsCollectionValuesWithoutAddedSpaces() {
+    assertEquals(
+        "{'ACTIVE','NEW'}",
+        printer.print(new OgnlCollectionExpression(List.of(parse("'ACTIVE'"), parse("'NEW'")))));
+  }
+
+  @Test
+  void printsUnknownExpressionRawValue() {
+    assertEquals("enabled ? name != null : admin", print("enabled ? name != null : admin"));
+  }
+
   private String print(String expression) {
-    return printer.print(new OgnlExpressionParser(expression).parse());
+    return printer.print(parse(expression));
+  }
+
+  private io.github.isksss.mapperforge.ast.ognl.OgnlExpression parse(String expression) {
+    return new OgnlExpressionParser(expression).parse();
   }
 }

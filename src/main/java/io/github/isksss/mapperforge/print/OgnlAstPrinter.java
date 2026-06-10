@@ -11,6 +11,11 @@ import io.github.isksss.mapperforge.ast.ognl.OgnlUnknownExpression;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ * OGNL AST を MapperForge の標準 OGNL 文字列表現へ変換する printer です。
+ *
+ * <p>operator の前後には安定した空白を入れ、必要な場合だけ precedence 保護用の括弧を出力します。
+ */
 public final class OgnlAstPrinter {
   private static final Map<String, Integer> PRECEDENCE =
       Map.ofEntries(
@@ -30,6 +35,15 @@ public final class OgnlAstPrinter {
           Map.entry("!", 40),
           Map.entry("primary", 50));
 
+  /** OGNL AST printer を作成します。 */
+  public OgnlAstPrinter() {}
+
+  /**
+   * OGNL expression AST を文字列へ変換します。
+   *
+   * @param expression 出力対象 OGNL expression
+   * @return OGNL 文字列表現
+   */
   public String print(OgnlExpression expression) {
     return print(expression, 0);
   }
