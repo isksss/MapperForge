@@ -17,7 +17,7 @@
 
 | Requirement | Evidence |
 | --- | --- |
-| GitHub plugin distribution | `build.gradle.kts` publishing block, `.github/workflows/publish.yml` |
+| GitHub plugin distribution | `build.gradle.kts` publishing block, `.github/workflows/publish.yml`, `docs/ja/adr/0088-lowercase-maven-artifact-id.md` |
 | GitHub Packages consumer docs | `README.md`, `docs/release.md`, `docs/ja/release.md` |
 | Release gate | `.github/workflows/publish.yml`, `docs/adr/0059-release-publish-integration-gate.md` |
 | CI gate | `.github/workflows/ci.yml`, `docs/adr/0058-github-actions-ci-gate.md` |

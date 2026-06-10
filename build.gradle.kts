@@ -74,6 +74,9 @@ publishing {
         }
     }
     publications.withType<MavenPublication>().configureEach {
+        if (name == "pluginMaven") {
+            artifactId = "mapperforge"
+        }
         pom {
             name = "MapperForge"
             description = "Formats and checks MyBatis Mapper XML files."
