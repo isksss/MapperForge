@@ -99,6 +99,29 @@ final class ValidatorTest {
   }
 
   @Test
+  void acceptsCdataSqlFormattingWhenConfigured() {
+    SourceFile before =
+        new SourceFile(
+            "before.xml",
+            "<mapper namespace=\"sample\"><select><![CDATA[select id from users where active = 1]]></select></mapper>");
+    SourceFile after =
+        new SourceFile(
+            "after.xml",
+            """
+            <mapper namespace="sample">
+                <select>
+                    <![CDATA[SELECT
+                id
+            FROM users
+            WHERE active = 1]]>
+                </select>
+            </mapper>
+            """);
+
+    assertTrue(validator.validate(before, after, formatSqlInsideCdataConfig()).success());
+  }
+
+  @Test
   void acceptsCdataWrapperRemovalWhenCdataIsNotPreserved() {
     SourceFile before =
         new SourceFile(
@@ -247,6 +270,27 @@ final class ValidatorTest {
         defaults.preserveWhitespace(),
         false,
         defaults.formatSqlInsideCdata(),
+        defaults.strict(),
+        defaults.attributeOrder());
+  }
+
+  private static FormatterConfig formatSqlInsideCdataConfig() {
+    FormatterConfig defaults = FormatterConfig.defaults();
+    return new FormatterConfig(
+        defaults.dialect(),
+        defaults.formatterVersion(),
+        defaults.include(),
+        defaults.exclude(),
+        defaults.indentSize(),
+        defaults.maxLineLength(),
+        defaults.lineEnding(),
+        defaults.sqlFormatStyle(),
+        defaults.sqlPrinter(),
+        defaults.tagWrapStyle(),
+        defaults.attributeLayout(),
+        defaults.preserveWhitespace(),
+        defaults.preserveCdata(),
+        true,
         defaults.strict(),
         defaults.attributeOrder());
   }

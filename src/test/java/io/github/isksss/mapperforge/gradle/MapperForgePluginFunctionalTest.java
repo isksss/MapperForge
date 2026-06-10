@@ -223,7 +223,7 @@ final class MapperForgePluginFunctionalTest {
   }
 
   @Test
-  void formatTaskFailsWhenStrictValidationFails() throws IOException {
+  void formatTaskFormatsSqlInsideCdataWhenConfigured() throws IOException {
     writeProject(
         """
         mapperForge {
@@ -241,16 +241,14 @@ final class MapperForgePluginFunctionalTest {
             .withProjectDir(projectDir.toFile())
             .withPluginClasspath()
             .withArguments("mapperForgeFormat")
-            .buildAndFail();
+            .build();
 
-    assertTrue(result.getOutput().contains("MapperForge validation failed"));
-    assertTrue(result.getOutput().contains("VALIDATION_ERROR"));
-    assertTrue(result.getOutput().contains("CDATA"));
-    assertEquals(original, Files.readString(mapper, StandardCharsets.UTF_8));
+    assertEquals(TaskOutcome.SUCCESS, result.task(":mapperForgeFormat").getOutcome());
+    assertTrue(Files.readString(mapper, StandardCharsets.UTF_8).contains("<![CDATA[SELECT"));
   }
 
   @Test
-  void formatTaskKeepsOriginalWhenNonStrictValidationFails() throws IOException {
+  void nonStrictFormatTaskFormatsSqlInsideCdataWhenConfigured() throws IOException {
     writeProject(
         """
         mapperForge {
@@ -272,10 +270,7 @@ final class MapperForgePluginFunctionalTest {
             .build();
 
     assertEquals(TaskOutcome.SUCCESS, result.task(":mapperForgeFormat").getOutcome());
-    assertTrue(result.getOutput().contains("MapperForge validation failed"));
-    assertTrue(result.getOutput().contains("VALIDATION_ERROR"));
-    assertTrue(result.getOutput().contains("CDATA"));
-    assertEquals(original, Files.readString(mapper, StandardCharsets.UTF_8));
+    assertTrue(Files.readString(mapper, StandardCharsets.UTF_8).contains("<![CDATA[SELECT"));
   }
 
   private void writeProject() throws IOException {

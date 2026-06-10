@@ -115,7 +115,9 @@ public final class Validator {
     if (!find(COMMENT, before).equals(find(COMMENT, after))) {
       return ErrorType.COMMENT;
     }
-    if (config.preserveCdata() && !find(CDATA, before).equals(find(CDATA, after))) {
+    if (config.preserveCdata()
+        && !config.formatSqlInsideCdata()
+        && !find(CDATA, before).equals(find(CDATA, after))) {
       return ErrorType.CDATA;
     }
     if (!ognlExpressionSignatures(parser.parse(new SourceFile("before.xml", before)))
@@ -130,7 +132,9 @@ public final class Validator {
       case TextNode ignored -> new TextNode(TextType.PLAIN_TEXT, "");
       case CommentNode comment -> comment;
       case CDataNode cdata ->
-          config.preserveCdata() ? cdata : new TextNode(TextType.PLAIN_TEXT, "");
+          config.preserveCdata() && !config.formatSqlInsideCdata()
+              ? cdata
+              : new TextNode(TextType.PLAIN_TEXT, "");
       case ElementNode element ->
           new GenericElementNode(
               element.tagName(),
