@@ -28,8 +28,20 @@ final class OgnlFormatterTest {
   }
 
   @Test
+  void blankExpressionFormatsToEmptyString() {
+    assertEquals("", formatter.format(" \n\t "));
+  }
+
+  @Test
   void fallsBackToLegacyFormattingForUnsupportedOgnl() {
     assertEquals(
         "enabled ? name != null : admin", formatter.format("enabled ? name!=null : admin"));
+  }
+
+  @Test
+  void legacyFallbackPreservesStringLiteralContent() {
+    assertEquals(
+        "enabled ? name != 'A>B and C' : admin",
+        formatter.format("enabled?name!='A>B and C':admin"));
   }
 }

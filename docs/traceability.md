@@ -81,7 +81,7 @@ This document maps the main `PLAN.local.md` requirements to implementation and v
 | --- | --- |
 | OGNL tokenizer/parser | `OgnlTokenizer`, `OgnlExpressionParser`, `OgnlExpressionParserTest` |
 | Operators and method/property access | `OgnlExpressionParserTest`, `OgnlFormatterTest`, `OgnlAstPrinterTest`, golden files |
-| OGNL formatter | `OgnlFormatter`, `OgnlFormatterTest`, dynamic attribute golden files |
+| OGNL formatter | `OgnlFormatter`, `OgnlFormatterTest`, dynamic attribute golden files, `docs/adr/0099-ognl-formatter-public-contract.md` |
 | OGNL AST printer | `OgnlAstPrinter`, `OgnlAstPrinterTest` |
 | Unknown recovery | `OgnlUnknownExpression`, `OgnlExpressionParserTest` |
 

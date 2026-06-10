@@ -5,11 +5,26 @@ import io.github.isksss.mapperforge.parse.ognl.OgnlExpressionParser;
 import io.github.isksss.mapperforge.print.OgnlAstPrinter;
 import java.util.Set;
 
+/**
+ * MyBatis dynamic SQL 属性内の OGNL expression を整形する formatter です。
+ *
+ * <p>parser が対応する expression は AST printer で整形し、未対応 expression は token based の legacy formatter に
+ * fallback します。
+ */
 public final class OgnlFormatter {
   private static final Set<String> WORD_OPERATORS = Set.of("and", "or", "in", "instanceof");
   private static final Set<String> PREFIX_WORD_OPERATORS = Set.of("not");
   private final OgnlAstPrinter printer = new OgnlAstPrinter();
 
+  /** OGNL formatter を作成します。 */
+  public OgnlFormatter() {}
+
+  /**
+   * OGNL expression を整形します。
+   *
+   * @param expression 整形対象 OGNL expression
+   * @return 整形後 OGNL expression。空白のみの expression は空文字
+   */
   public String format(String expression) {
     var parsed = new OgnlExpressionParser(expression).parse();
     if (!(parsed instanceof OgnlUnknownExpression)) {
