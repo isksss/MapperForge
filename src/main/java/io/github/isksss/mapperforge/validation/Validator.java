@@ -1,5 +1,11 @@
 package io.github.isksss.mapperforge.validation;
 
+import io.github.isksss.mapperforge.ast.mapper.CDataNode;
+import io.github.isksss.mapperforge.ast.mapper.CommentNode;
+import io.github.isksss.mapperforge.ast.mapper.GenericElementNode;
+import io.github.isksss.mapperforge.ast.mapper.MapperNode;
+import io.github.isksss.mapperforge.ast.mapper.TextNode;
+import io.github.isksss.mapperforge.ast.mapper.TextType;
 import io.github.isksss.mapperforge.config.FormatterConfig;
 import io.github.isksss.mapperforge.parse.MapperXmlParser;
 import io.github.isksss.mapperforge.source.SourceFile;
@@ -28,8 +34,8 @@ public final class Validator {
   }
 
   private void compareAst(SourceFile before, SourceFile after, List<ValidationError> errors) {
-    var beforeAst = parser.parse(before);
-    var afterAst = parser.parse(after);
+    var beforeAst = comparable(parser.parse(before));
+    var afterAst = comparable(parser.parse(after));
     if (!beforeAst.equals(afterAst)) {
       errors.add(
           new ValidationError(
@@ -47,6 +53,19 @@ public final class Validator {
       return ErrorType.CDATA;
     }
     return ErrorType.GENERIC_ELEMENT;
+  }
+
+  private MapperNode comparable(MapperNode node) {
+    return switch (node) {
+      case TextNode ignored -> new TextNode(TextType.PLAIN_TEXT, "");
+      case CommentNode comment -> comment;
+      case CDataNode cdata -> cdata;
+      case GenericElementNode element ->
+          new GenericElementNode(
+              element.tagName(),
+              element.attributes(),
+              element.children().stream().map(this::comparable).toList());
+    };
   }
 
   private void compare(

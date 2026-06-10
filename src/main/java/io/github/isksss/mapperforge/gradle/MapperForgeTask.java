@@ -150,6 +150,16 @@ public abstract class MapperForgeTask extends DefaultTask {
         SourceFile source = new SourceFile(file.getName(), before);
         String after = getMapperForge().format(source, config);
         if (!before.equals(after)) {
+          var validation =
+              getMapperForge().validate(source, new SourceFile(file.getName(), after), config);
+          if (!validation.success()) {
+            String message = "MapperForge validation failed: " + file;
+            if (config.strict()) {
+              throw new GradleException(message);
+            }
+            getLogger().warn(message);
+            continue;
+          }
           switch (getMode().get()) {
             case FORMAT -> Files.writeString(file.toPath(), after, StandardCharsets.UTF_8);
             case CHECK -> {
