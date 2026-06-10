@@ -7,6 +7,14 @@ import io.github.isksss.mapperforge.ast.mapper.GenericElementNode;
 import io.github.isksss.mapperforge.ast.mapper.MapperNode;
 import io.github.isksss.mapperforge.ast.mapper.TextNode;
 import io.github.isksss.mapperforge.ast.mapper.TextType;
+import io.github.isksss.mapperforge.ast.ognl.OgnlBinaryExpression;
+import io.github.isksss.mapperforge.ast.ognl.OgnlCallExpression;
+import io.github.isksss.mapperforge.ast.ognl.OgnlCollectionExpression;
+import io.github.isksss.mapperforge.ast.ognl.OgnlExpression;
+import io.github.isksss.mapperforge.ast.ognl.OgnlLiteralExpression;
+import io.github.isksss.mapperforge.ast.ognl.OgnlNameExpression;
+import io.github.isksss.mapperforge.ast.ognl.OgnlUnaryExpression;
+import io.github.isksss.mapperforge.ast.ognl.OgnlUnknownExpression;
 import io.github.isksss.mapperforge.ast.sql.DeleteStatement;
 import io.github.isksss.mapperforge.ast.sql.Expression;
 import io.github.isksss.mapperforge.ast.sql.InsertStatement;
@@ -19,6 +27,7 @@ import io.github.isksss.mapperforge.ast.sql.UpdateStatement;
 import io.github.isksss.mapperforge.ast.sql.WithStatement;
 import io.github.isksss.mapperforge.config.FormatterConfig;
 import io.github.isksss.mapperforge.parse.MapperXmlParser;
+import io.github.isksss.mapperforge.parse.ognl.OgnlExpressionParser;
 import io.github.isksss.mapperforge.parse.sql.PlaceholderParser;
 import io.github.isksss.mapperforge.parse.sql.SqlStatementParser;
 import io.github.isksss.mapperforge.source.SourceFile;
@@ -85,6 +94,10 @@ public final class Validator {
     if (!find(CDATA, before).equals(find(CDATA, after))) {
       return ErrorType.CDATA;
     }
+    if (!ognlExpressionSignatures(parser.parse(new SourceFile("before.xml", before)))
+        .equals(ognlExpressionSignatures(parser.parse(new SourceFile("after.xml", after))))) {
+      return ErrorType.EXPRESSION;
+    }
     return ErrorType.GENERIC_ELEMENT;
   }
 
@@ -96,15 +109,54 @@ public final class Validator {
       case ElementNode element ->
           new GenericElementNode(
               element.tagName(),
-              element.attributes(),
+              comparableAttributes(element),
               element.children().stream().map(this::comparable).toList());
     };
+  }
+
+  private List<io.github.isksss.mapperforge.ast.mapper.AttributeNode> comparableAttributes(
+      ElementNode element) {
+    return element.attributes().stream()
+        .map(
+            attribute -> {
+              if (isOgnlAttribute(element.tagName(), attribute.name())) {
+                return new io.github.isksss.mapperforge.ast.mapper.AttributeNode(
+                    attribute.name(), ognlExpressionSignature(attribute.value()).toString());
+              }
+              return attribute;
+            })
+        .toList();
   }
 
   private List<Object> sqlStatementSignatures(MapperNode node) {
     List<Object> statements = new ArrayList<>();
     collectSqlStatementSignatures(node, statements);
     return List.copyOf(statements);
+  }
+
+  private List<Object> ognlExpressionSignatures(MapperNode node) {
+    List<Object> expressions = new ArrayList<>();
+    collectOgnlExpressionSignatures(node, expressions);
+    return List.copyOf(expressions);
+  }
+
+  private void collectOgnlExpressionSignatures(MapperNode node, List<Object> expressions) {
+    if (node instanceof ElementNode element) {
+      element.attributes().stream()
+          .filter(attribute -> isOgnlAttribute(element.tagName(), attribute.name()))
+          .map(attribute -> ognlExpressionSignature(attribute.value()))
+          .forEach(expressions::add);
+      element.children().forEach(child -> collectOgnlExpressionSignatures(child, expressions));
+    }
+  }
+
+  private boolean isOgnlAttribute(String tagName, String attributeName) {
+    return switch (tagName) {
+      case "if", "when" -> "test".equals(attributeName);
+      case "bind" -> "value".equals(attributeName);
+      case "foreach" -> "collection".equals(attributeName);
+      default -> false;
+    };
   }
 
   private void collectSqlStatementSignatures(MapperNode node, List<Object> statements) {
@@ -183,6 +235,38 @@ public final class Validator {
       return List.of("UNKNOWN", normalizeSql(unknown.raw()));
     }
     return expression;
+  }
+
+  private Object ognlExpressionSignature(String expression) {
+    return ognlExpression(new OgnlExpressionParser(expression).parse());
+  }
+
+  private Object ognlExpression(OgnlExpression expression) {
+    return switch (expression) {
+      case OgnlBinaryExpression binary ->
+          List.of(
+              "BINARY",
+              ognlExpression(binary.left()),
+              binary.operator().toLowerCase(Locale.ROOT),
+              ognlExpression(binary.right()));
+      case OgnlUnaryExpression unary ->
+          List.of(
+              "UNARY",
+              unary.operator().toLowerCase(Locale.ROOT),
+              ognlExpression(unary.expression()));
+      case OgnlCallExpression call ->
+          List.of(
+              "CALL", call.name(), call.arguments().stream().map(this::ognlExpression).toList());
+      case OgnlCollectionExpression collection ->
+          List.of("COLLECTION", collection.values().stream().map(this::ognlExpression).toList());
+      case OgnlLiteralExpression literal -> List.of("LITERAL", literal.value());
+      case OgnlNameExpression name -> List.of("NAME", name.name());
+      case OgnlUnknownExpression unknown -> List.of("UNKNOWN", normalizeOgnl(unknown.raw()));
+    };
+  }
+
+  private String normalizeOgnl(String raw) {
+    return raw.strip().replaceAll("\\s+", " ");
   }
 
   private String normalizeSql(String raw) {

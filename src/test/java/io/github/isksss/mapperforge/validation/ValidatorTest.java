@@ -125,4 +125,43 @@ final class ValidatorTest {
     assertFalse(result.success());
     assertEquals(ErrorType.STATEMENT, result.errors().getFirst().type());
   }
+
+  @Test
+  void acceptsOgnlFormattingOnlyChanges() {
+    SourceFile before =
+        new SourceFile(
+            "before.xml",
+            "<mapper namespace=\"sample\"><select id=\"find\"><if test=\"name!=null&amp;&amp;status in {'ACTIVE','NEW'}\">and name = #{name}</if></select></mapper>");
+    SourceFile after =
+        new SourceFile(
+            "after.xml",
+            """
+            <mapper namespace="sample">
+                <select id="find">
+                    <if test="name != null &amp;&amp; status in {'ACTIVE','NEW'}">
+                        AND name = #{name}
+                    </if>
+                </select>
+            </mapper>
+            """);
+
+    assertTrue(validator.validate(before, after, FormatterConfig.defaults()).success());
+  }
+
+  @Test
+  void rejectsOgnlSemanticChanges() {
+    SourceFile before =
+        new SourceFile(
+            "before.xml",
+            "<mapper namespace=\"sample\"><select id=\"find\"><if test=\"name!=null\">and name = #{name}</if></select></mapper>");
+    SourceFile after =
+        new SourceFile(
+            "after.xml",
+            "<mapper namespace=\"sample\"><select id=\"find\"><if test=\"name==null\">and name = #{name}</if></select></mapper>");
+
+    ValidationResult result = validator.validate(before, after, FormatterConfig.defaults());
+
+    assertFalse(result.success());
+    assertEquals(ErrorType.EXPRESSION, result.errors().getFirst().type());
+  }
 }
