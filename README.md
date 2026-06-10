@@ -68,3 +68,5 @@ Local publication check:
 ```bash
 ./gradlew publishToMavenLocal -PreleaseVersion=0.1.0-local
 ```
+
+See [docs/release.md](docs/release.md) for the release checklist.
