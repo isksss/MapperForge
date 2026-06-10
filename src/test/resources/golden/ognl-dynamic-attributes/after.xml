@@ -1,0 +1,23 @@
+<mapper namespace="sample.UserMapper">
+    <select id="search" resultType="User">
+        <bind name="safeName" value="name != null ? name : null"></bind>
+        SELECT
+            id
+        FROM users
+        <where>
+            <if test="safeName != null">
+                AND name = #{safeName}
+            </if>
+            <if test="ids != null">
+                <foreach
+                    collection="ids != null ? ids : emptyIds"
+                    item="id"
+                    open="and id in ("
+                    separator=","
+                    close=")">
+                    #{id}
+                </foreach>
+            </if>
+        </where>
+    </select>
+</mapper>

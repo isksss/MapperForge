@@ -160,7 +160,7 @@ public final class MapperXmlFormatter {
     for (int i = 0; i < reader.getAttributeCount(); i++) {
       String name = reader.getAttributeLocalName(i);
       String value = reader.getAttributeValue(i);
-      if ("test".equals(name)) {
+      if (isOgnlAttribute(tagName, name)) {
         value = ognlFormatter.format(value);
       }
       attributes.add(new XmlAttribute(name, value));
@@ -175,6 +175,15 @@ public final class MapperXmlFormatter {
               }));
     }
     return attributes;
+  }
+
+  private boolean isOgnlAttribute(String tagName, String attributeName) {
+    return switch (tagName) {
+      case "if", "when" -> "test".equals(attributeName);
+      case "bind" -> "value".equals(attributeName);
+      case "foreach" -> "collection".equals(attributeName);
+      default -> false;
+    };
   }
 
   private int estimatedStartLength(String tagName, List<XmlAttribute> attributes) {
