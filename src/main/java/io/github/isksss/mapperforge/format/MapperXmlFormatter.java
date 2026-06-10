@@ -206,7 +206,7 @@ public final class MapperXmlFormatter {
         continue;
       }
       newline(out, depth, config);
-      out.append(line.stripTrailing());
+      out.append(escapeNormalText(line.stripTrailing()));
     }
   }
 
@@ -267,6 +267,10 @@ public final class MapperXmlFormatter {
 
   private String escapeText(String value) {
     return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+  }
+
+  private String escapeNormalText(String value) {
+    return value.replace("&", "&amp;").replace("<", "&lt;");
   }
 
   private record XmlAttribute(String name, String value) {}

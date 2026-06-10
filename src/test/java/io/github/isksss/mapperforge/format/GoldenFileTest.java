@@ -28,6 +28,8 @@ final class GoldenFileTest {
           "attribute-layout",
           "attribute-order",
           "ast-sql-printer",
+          "cdata-format-sql-inside",
+          "cdata-not-preserved",
           "sql-compact",
           "sql-single-line",
           "tag-wrap-always");
@@ -77,6 +79,16 @@ final class GoldenFileTest {
   }
 
   @Test
+  void formatsSqlInsideCdataWhenConfigured() throws IOException {
+    assertGolden("cdata-format-sql-inside", configFor("cdata-format-sql-inside"));
+  }
+
+  @Test
+  void convertsCdataToEscapedTextWhenNotPreserved() throws IOException {
+    assertGolden("cdata-not-preserved", configFor("cdata-not-preserved"));
+  }
+
+  @Test
   void appliesCompactSqlStyle() throws IOException {
     assertGolden("sql-compact", configFor("sql-compact"));
   }
@@ -118,6 +130,12 @@ final class GoldenFileTest {
     }
     if ("ast-sql-printer".equals(goldenName)) {
       return astSqlPrinterConfig();
+    }
+    if ("cdata-format-sql-inside".equals(goldenName)) {
+      return cdataConfig(true, true);
+    }
+    if ("cdata-not-preserved".equals(goldenName)) {
+      return cdataConfig(false, false);
     }
     if ("sql-compact".equals(goldenName)) {
       return sqlStyleConfig(io.github.isksss.mapperforge.config.SqlFormatStyle.COMPACT);
@@ -233,6 +251,27 @@ final class GoldenFileTest {
         defaults.preserveWhitespace(),
         defaults.preserveCdata(),
         defaults.formatSqlInsideCdata(),
+        defaults.strict(),
+        defaults.attributeOrder());
+  }
+
+  private FormatterConfig cdataConfig(boolean preserveCdata, boolean formatSqlInsideCdata) {
+    FormatterConfig defaults = FormatterConfig.defaults();
+    return new FormatterConfig(
+        defaults.dialect(),
+        defaults.formatterVersion(),
+        defaults.include(),
+        defaults.exclude(),
+        defaults.indentSize(),
+        defaults.maxLineLength(),
+        defaults.lineEnding(),
+        defaults.sqlFormatStyle(),
+        defaults.sqlPrinter(),
+        defaults.tagWrapStyle(),
+        defaults.attributeLayout(),
+        defaults.preserveWhitespace(),
+        preserveCdata,
+        formatSqlInsideCdata,
         defaults.strict(),
         defaults.attributeOrder());
   }

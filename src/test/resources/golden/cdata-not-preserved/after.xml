@@ -1,0 +1,9 @@
+<mapper namespace="sample.UserMapper">
+    <select id="find">
+        SELECT
+            id,
+            name
+        FROM users
+        WHERE age &lt; #{age} AND flags &amp; #{mask}
+    </select>
+</mapper>

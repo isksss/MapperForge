@@ -1,0 +1,1 @@
+<mapper namespace="sample.UserMapper"><select id="find"><![CDATA[select id, name from users where age < #{age} and flags & #{mask}]]></select></mapper>
