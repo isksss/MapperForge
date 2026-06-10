@@ -4,8 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.isksss.mapperforge.MapperForge;
+import io.github.isksss.mapperforge.config.AttributeLayout;
 import io.github.isksss.mapperforge.config.FormatterConfig;
 import io.github.isksss.mapperforge.config.SqlPrinter;
+import io.github.isksss.mapperforge.config.TagWrapStyle;
 import io.github.isksss.mapperforge.source.SourceFile;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -22,7 +24,7 @@ import org.junit.jupiter.api.TestFactory;
 
 final class GoldenFileTest {
   private static final Set<String> CUSTOM_CONFIG_GOLDEN_FILES =
-      Set.of("attribute-order", "ast-sql-printer");
+      Set.of("attribute-layout", "attribute-order", "ast-sql-printer", "tag-wrap-always");
   private final MapperForge mapperForge = new MapperForge();
 
   @TestFactory
@@ -59,8 +61,18 @@ final class GoldenFileTest {
   }
 
   @Test
+  void appliesOnePerLineAttributeLayout() throws IOException {
+    assertGolden("attribute-layout", configFor("attribute-layout"));
+  }
+
+  @Test
   void appliesAstSqlPrinterWhenConfigured() throws IOException {
     assertGolden("ast-sql-printer", configFor("ast-sql-printer"));
+  }
+
+  @Test
+  void appliesAlwaysTagWrapStyle() throws IOException {
+    assertGolden("tag-wrap-always", configFor("tag-wrap-always"));
   }
 
   @TestFactory
@@ -85,8 +97,14 @@ final class GoldenFileTest {
     if ("attribute-order".equals(goldenName)) {
       return attributeOrderConfig();
     }
+    if ("attribute-layout".equals(goldenName)) {
+      return attributeLayoutConfig();
+    }
     if ("ast-sql-printer".equals(goldenName)) {
       return astSqlPrinterConfig();
+    }
+    if ("tag-wrap-always".equals(goldenName)) {
+      return tagWrapAlwaysConfig();
     }
     return FormatterConfig.defaults();
   }
@@ -125,6 +143,48 @@ final class GoldenFileTest {
         defaults.sqlFormatStyle(),
         SqlPrinter.AST,
         defaults.tagWrapStyle(),
+        defaults.attributeLayout(),
+        defaults.preserveWhitespace(),
+        defaults.preserveCdata(),
+        defaults.formatSqlInsideCdata(),
+        defaults.strict(),
+        defaults.attributeOrder());
+  }
+
+  private FormatterConfig attributeLayoutConfig() {
+    FormatterConfig defaults = FormatterConfig.defaults();
+    return new FormatterConfig(
+        defaults.dialect(),
+        defaults.formatterVersion(),
+        defaults.include(),
+        defaults.exclude(),
+        defaults.indentSize(),
+        defaults.maxLineLength(),
+        defaults.lineEnding(),
+        defaults.sqlFormatStyle(),
+        defaults.sqlPrinter(),
+        defaults.tagWrapStyle(),
+        AttributeLayout.ONE_PER_LINE,
+        defaults.preserveWhitespace(),
+        defaults.preserveCdata(),
+        defaults.formatSqlInsideCdata(),
+        defaults.strict(),
+        defaults.attributeOrder());
+  }
+
+  private FormatterConfig tagWrapAlwaysConfig() {
+    FormatterConfig defaults = FormatterConfig.defaults();
+    return new FormatterConfig(
+        defaults.dialect(),
+        defaults.formatterVersion(),
+        defaults.include(),
+        defaults.exclude(),
+        defaults.indentSize(),
+        defaults.maxLineLength(),
+        defaults.lineEnding(),
+        defaults.sqlFormatStyle(),
+        defaults.sqlPrinter(),
+        TagWrapStyle.ALWAYS,
         defaults.attributeLayout(),
         defaults.preserveWhitespace(),
         defaults.preserveCdata(),

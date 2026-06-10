@@ -1,0 +1,13 @@
+<mapper
+    namespace="sample.UserMapper">
+    <select
+        id="find"
+        resultType="User"
+        parameterType="map"
+        databaseId="postgres">
+        SELECT
+            id
+        FROM users
+        WHERE id = #{id}
+    </select>
+</mapper>

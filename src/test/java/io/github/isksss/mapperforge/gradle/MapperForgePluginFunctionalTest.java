@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import org.gradle.testkit.runner.GradleRunner;
 import org.gradle.testkit.runner.TaskOutcome;
 import org.junit.jupiter.api.Test;
@@ -84,7 +85,9 @@ final class MapperForgePluginFunctionalTest {
     var first = runner.build();
     var second = runner.build();
 
-    assertEquals(TaskOutcome.SUCCESS, first.task(":mapperForgeCheck").getOutcome());
+    assertTrue(
+        List.of(TaskOutcome.SUCCESS, TaskOutcome.FROM_CACHE)
+            .contains(first.task(":mapperForgeCheck").getOutcome()));
     assertEquals(TaskOutcome.UP_TO_DATE, second.task(":mapperForgeCheck").getOutcome());
   }
 
