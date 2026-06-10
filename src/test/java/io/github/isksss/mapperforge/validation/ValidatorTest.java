@@ -52,6 +52,8 @@ final class ValidatorTest {
 
     assertFalse(result.success());
     assertEquals(ErrorType.WHITESPACE, result.errors().getFirst().type());
+    assertEquals(1, result.errors().getFirst().location().start().line());
+    assertEquals(27, result.errors().getFirst().location().start().column());
   }
 
   @Test

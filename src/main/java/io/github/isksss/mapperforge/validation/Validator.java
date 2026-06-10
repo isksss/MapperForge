@@ -85,10 +85,16 @@ public final class Validator {
     if (!config.preserveWhitespace()) {
       return;
     }
-    if (!find(TAG_BOUNDARY_WHITESPACE, before).equals(find(TAG_BOUNDARY_WHITESPACE, after))) {
+    var beforeWhitespace = findMatches(TAG_BOUNDARY_WHITESPACE, before);
+    var afterWhitespace = findMatches(TAG_BOUNDARY_WHITESPACE, after);
+    var beforeValues = beforeWhitespace.stream().map(TextMatch::value).toList();
+    var afterValues = afterWhitespace.stream().map(TextMatch::value).toList();
+    if (!beforeValues.equals(afterValues)) {
+      int differingIndex = firstDifferingIndex(beforeValues, afterValues);
+      Range location = firstAvailableRange(differingIndex, beforeWhitespace, afterWhitespace);
       errors.add(
           new ValidationError(
-              ErrorType.WHITESPACE, "Formatted XML changed whitespace sequence", null));
+              ErrorType.WHITESPACE, "Formatted XML changed whitespace sequence", location));
     }
   }
 
@@ -560,6 +566,17 @@ public final class Validator {
       }
     }
     return before.size() == after.size() ? -1 : size;
+  }
+
+  private Range firstAvailableRange(
+      int index, List<TextMatch> beforeMatches, List<TextMatch> afterMatches) {
+    if (index >= 0 && index < beforeMatches.size()) {
+      return beforeMatches.get(index).range();
+    }
+    if (index >= 0 && index < afterMatches.size()) {
+      return afterMatches.get(index).range();
+    }
+    return null;
   }
 
   private Range sourceRange(String source, int startOffset, int endOffset) {
