@@ -94,4 +94,36 @@ final class FormatterRulePipelineTest {
         "id!=null&&name!='A>B and C'",
         ((IfElementNode) input.children().getFirst()).attributes().getFirst().value());
   }
+
+  @Test
+  void formatterContextCanReplaceConfigAndSource() {
+    FormatterConfig initialConfig = FormatterConfig.defaults();
+    SourceFile initialSource = new SourceFile("initial.xml", "<mapper/>");
+    FormatterContext context = new FormatterContext(initialConfig, initialSource);
+    FormatterConfig nextConfig =
+        new FormatterConfig(
+            initialConfig.dialect(),
+            initialConfig.formatterVersion(),
+            initialConfig.include(),
+            initialConfig.exclude(),
+            initialConfig.indentSize(),
+            initialConfig.maxLineLength(),
+            "CRLF",
+            initialConfig.sqlFormatStyle(),
+            initialConfig.sqlPrinter(),
+            initialConfig.tagWrapStyle(),
+            initialConfig.attributeLayout(),
+            initialConfig.preserveWhitespace(),
+            initialConfig.preserveCdata(),
+            initialConfig.formatSqlInsideCdata(),
+            initialConfig.strict(),
+            initialConfig.attributeOrder());
+    SourceFile nextSource = new SourceFile("next.xml", "<mapper namespace=\"next\"/>");
+
+    context.setConfig(nextConfig);
+    context.setSource(nextSource);
+
+    assertEquals(nextConfig, context.config());
+    assertEquals(nextSource, context.source());
+  }
 }

@@ -89,7 +89,7 @@
 
 | Requirement | Evidence |
 | --- | --- |
-| Fixed v1 rule pipeline | `FormatterRulePipeline`, `FormatterRulePipelineTest` |
+| Fixed v1 rule pipeline | `FormatterRulePipeline`, `FormatterContext`, `FormatterRulePipelineTest`, `docs/ja/adr/0093-formatter-context-public-contract.md` |
 | Idempotent formatting | `GoldenFileTest.goldenFilesAreIdempotent` |
 | Golden file tests | `src/test/resources/golden/*`, `GoldenFileTest` |
 | Printer Doc Tree | `print/*Doc.java`, `Docs`, `LayoutEngine`, `DocTreeTest`, `LayoutEngineTest` |
