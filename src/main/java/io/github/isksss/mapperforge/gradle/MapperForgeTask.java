@@ -21,19 +21,20 @@ import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.ConfigurableFileTree;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.OutputFiles;
+import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.work.DisableCachingByDefault;
 
-@DisableCachingByDefault(because = "The format mode writes source files in place.")
+@DisableCachingByDefault(because = "Mode-specific subclasses define cache behavior.")
 public abstract class MapperForgeTask extends DefaultTask {
   public enum Mode {
     FORMAT,
@@ -101,10 +102,8 @@ public abstract class MapperForgeTask extends DefaultTask {
     return sourceFiles;
   }
 
-  @OutputFiles
-  protected ConfigurableFileCollection getOutputFiles() {
-    return sourceFiles;
-  }
+  @OutputFile
+  public abstract RegularFileProperty getStateFile();
 
   @Internal
   protected MapperForge getMapperForge() {
@@ -135,11 +134,14 @@ public abstract class MapperForgeTask extends DefaultTask {
         .set(extension.getFormatSqlInsideCdata().orElse(yamlConfig.formatSqlInsideCdata()));
     getStrict().set(extension.getStrict().orElse(yamlConfig.strict()));
     getAttributeOrder().set(extension.getAttributeOrder().orElse(yamlConfig.attributeOrder()));
+    getStateFile()
+        .convention(
+            project.getLayout().getBuildDirectory().file("mapperforge/" + getName() + ".state"));
 
     ConfigurableFileTree fileTree = project.fileTree(project.getProjectDir());
     fileTree.include(getInclude().get());
     fileTree.exclude(getExclude().get());
-    sourceFiles.setFrom(fileTree);
+    sourceFiles.setFrom(fileTree.filter(file -> file.isFile() && file.getName().endsWith(".xml")));
   }
 
   @TaskAction
@@ -191,6 +193,11 @@ public abstract class MapperForgeTask extends DefaultTask {
     if (failed) {
       throw new GradleException("MapperForge check failed.");
     }
+    try {
+      writeStateFile(config);
+    } catch (IOException e) {
+      throw new GradleException("Failed to write MapperForge task state", e);
+    }
   }
 
   private FormatterConfig config() {
@@ -226,5 +233,14 @@ public abstract class MapperForgeTask extends DefaultTask {
 
   private String relativePath(Path path) {
     return getProject().getProjectDir().toPath().relativize(path).toString();
+  }
+
+  private void writeStateFile(FormatterConfig config) throws IOException {
+    Path stateFile = getStateFile().get().getAsFile().toPath();
+    Files.createDirectories(stateFile.getParent());
+    Files.writeString(
+        stateFile,
+        "mode=" + getMode().get() + "\nformatterVersion=" + config.formatterVersion() + "\n",
+        StandardCharsets.UTF_8);
   }
 }

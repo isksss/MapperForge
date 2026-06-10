@@ -58,6 +58,37 @@ final class MapperForgePluginFunctionalTest {
   }
 
   @Test
+  void checkTaskIsUpToDateAfterSuccessfulRun() throws IOException {
+    writeProject();
+    Path mapper = projectDir.resolve("src/main/resources/sample/UserMapper.xml");
+    Files.createDirectories(mapper.getParent());
+    Files.writeString(
+        mapper,
+        """
+        <mapper namespace="sample.UserMapper">
+            <select id="find">
+                SELECT
+                    id
+                FROM users
+            </select>
+        </mapper>
+        """,
+        StandardCharsets.UTF_8);
+
+    var runner =
+        GradleRunner.create()
+            .withProjectDir(projectDir.toFile())
+            .withPluginClasspath()
+            .withArguments("mapperForgeCheck", "--build-cache");
+
+    var first = runner.build();
+    var second = runner.build();
+
+    assertEquals(TaskOutcome.SUCCESS, first.task(":mapperForgeCheck").getOutcome());
+    assertEquals(TaskOutcome.UP_TO_DATE, second.task(":mapperForgeCheck").getOutcome());
+  }
+
+  @Test
   void dryRunPrintsUnifiedDiff() throws IOException {
     writeProject();
     Path mapper = projectDir.resolve("src/main/resources/sample/UserMapper.xml");

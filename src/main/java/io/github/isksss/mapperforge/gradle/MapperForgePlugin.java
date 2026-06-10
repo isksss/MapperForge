@@ -13,11 +13,10 @@ public final class MapperForgePlugin implements Plugin<Project> {
         .getTasks()
         .register(
             "mapperForgeFormat",
-            MapperForgeTask.class,
+            MapperForgeFormatTask.class,
             task -> {
               task.setGroup("formatting");
               task.setDescription("Formats MyBatis Mapper XML files.");
-              task.getMode().set(MapperForgeTask.Mode.FORMAT);
               task.configureFrom(project, extension);
             });
 
@@ -25,11 +24,10 @@ public final class MapperForgePlugin implements Plugin<Project> {
         .getTasks()
         .register(
             "mapperForgeCheck",
-            MapperForgeTask.class,
+            MapperForgeCheckTask.class,
             task -> {
               task.setGroup("verification");
               task.setDescription("Checks MyBatis Mapper XML formatting.");
-              task.getMode().set(MapperForgeTask.Mode.CHECK);
               task.configureFrom(project, extension);
             });
 
@@ -37,11 +35,10 @@ public final class MapperForgePlugin implements Plugin<Project> {
         .getTasks()
         .register(
             "mapperForgeDryRun",
-            MapperForgeTask.class,
+            MapperForgeDryRunTask.class,
             task -> {
               task.setGroup("verification");
               task.setDescription("Prints MyBatis Mapper XML files that would be formatted.");
-              task.getMode().set(MapperForgeTask.Mode.DRY_RUN);
               task.configureFrom(project, extension);
             });
   }
