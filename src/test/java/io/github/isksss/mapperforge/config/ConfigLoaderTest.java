@@ -101,6 +101,18 @@ final class ConfigLoaderTest {
   }
 
   @Test
+  void rejectsInvalidEnumValueWithAllowedValues() throws IOException {
+    Path config = tempDir.resolve("mapperforge.yml");
+    Files.writeString(config, "dialect: sqlite\n", StandardCharsets.UTF_8);
+
+    ConfigException error =
+        assertThrows(ConfigException.class, () -> new ConfigLoader().load(config));
+
+    assertEquals(ErrorCode.CONFIG_ERROR, error.code());
+    assertEquals("dialect must be one of [POSTGRESQL, MYSQL]: sqlite", error.getMessage());
+  }
+
+  @Test
   void normalizesLineEndingAliases() {
     FormatterConfig crlf =
         new FormatterConfig(

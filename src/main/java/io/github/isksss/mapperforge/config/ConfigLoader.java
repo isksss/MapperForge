@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -46,17 +47,26 @@ public final class ConfigLoader {
 
   private FormatterConfig merge(FormatterConfig base, Map<String, Object> yaml) {
     return new FormatterConfig(
-        enumValue(Dialect.class, yaml.get("dialect"), base.dialect()),
+        enumValue("dialect", Dialect.class, yaml.get("dialect"), base.dialect()),
         stringValue(yaml.get("formatterVersion"), base.formatterVersion()),
         stringList(yaml.get("include"), base.include()),
         stringList(yaml.get("exclude"), base.exclude()),
         intValue(yaml.get("indentSize"), base.indentSize()),
         intValue(yaml.get("maxLineLength"), base.maxLineLength()),
         lineEnding(yaml.get("lineEnding"), base.lineEnding()),
-        enumValue(SqlFormatStyle.class, yaml.get("sqlFormatStyle"), base.sqlFormatStyle()),
-        enumValue(SqlPrinter.class, yaml.get("sqlPrinter"), base.sqlPrinter()),
-        enumValue(TagWrapStyle.class, yaml.get("tagWrapStyle"), base.tagWrapStyle()),
-        enumValue(AttributeLayout.class, yaml.get("attributeLayout"), base.attributeLayout()),
+        enumValue(
+            "sqlFormatStyle",
+            SqlFormatStyle.class,
+            yaml.get("sqlFormatStyle"),
+            base.sqlFormatStyle()),
+        enumValue("sqlPrinter", SqlPrinter.class, yaml.get("sqlPrinter"), base.sqlPrinter()),
+        enumValue(
+            "tagWrapStyle", TagWrapStyle.class, yaml.get("tagWrapStyle"), base.tagWrapStyle()),
+        enumValue(
+            "attributeLayout",
+            AttributeLayout.class,
+            yaml.get("attributeLayout"),
+            base.attributeLayout()),
         booleanValue(yaml.get("preserveWhitespace"), base.preserveWhitespace()),
         booleanValue(yaml.get("preserveCdata"), base.preserveCdata()),
         booleanValue(yaml.get("formatSqlInsideCdata"), base.formatSqlInsideCdata()),
@@ -124,11 +134,20 @@ public final class ConfigLoader {
     return Map.copyOf(result);
   }
 
-  private <E extends Enum<E>> E enumValue(Class<E> type, Object value, E fallback) {
+  private <E extends Enum<E>> E enumValue(String key, Class<E> type, Object value, E fallback) {
     if (value == null) {
       return fallback;
     }
-    return Enum.valueOf(type, String.valueOf(value).toUpperCase(Locale.ROOT));
+    String raw = String.valueOf(value);
+    try {
+      return Enum.valueOf(type, raw.toUpperCase(Locale.ROOT));
+    } catch (IllegalArgumentException e) {
+      throw new ConfigException(key + " must be one of " + allowedValues(type) + ": " + raw, e);
+    }
+  }
+
+  private <E extends Enum<E>> List<String> allowedValues(Class<E> type) {
+    return Arrays.stream(type.getEnumConstants()).map(Enum::name).toList();
   }
 
   public static final class ConfigException extends RuntimeException {
