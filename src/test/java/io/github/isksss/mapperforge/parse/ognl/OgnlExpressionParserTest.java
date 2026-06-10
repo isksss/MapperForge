@@ -10,6 +10,7 @@ import io.github.isksss.mapperforge.ast.ognl.OgnlExpression;
 import io.github.isksss.mapperforge.ast.ognl.OgnlLiteralExpression;
 import io.github.isksss.mapperforge.ast.ognl.OgnlNameExpression;
 import io.github.isksss.mapperforge.ast.ognl.OgnlUnaryExpression;
+import io.github.isksss.mapperforge.ast.ognl.OgnlUnknownExpression;
 import org.junit.jupiter.api.Test;
 
 final class OgnlExpressionParserTest {
@@ -57,6 +58,22 @@ final class OgnlExpressionParserTest {
     assertEquals(
         "ACTIVE",
         assertInstanceOf(OgnlLiteralExpression.class, collection.values().get(0)).value());
+  }
+
+  @Test
+  void fallsBackToUnknownExpressionWhenTokensRemain() {
+    OgnlUnknownExpression expression =
+        assertInstanceOf(OgnlUnknownExpression.class, parse("name matches '^A'"));
+
+    assertEquals("name matches '^A'", expression.raw());
+  }
+
+  @Test
+  void fallsBackToUnknownExpressionForMalformedExpression() {
+    OgnlUnknownExpression expression =
+        assertInstanceOf(OgnlUnknownExpression.class, parse("name != )"));
+
+    assertEquals("name != )", expression.raw());
   }
 
   private static OgnlExpression parse(String ognl) {
