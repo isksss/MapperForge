@@ -11,12 +11,14 @@ public record SelectStatement(
     Expression having,
     List<OrderByItem> orderBy,
     Expression limit,
-    Expression offset)
+    Expression offset,
+    List<JoinItem> joins)
     implements Statement {
   public SelectStatement {
     selectItems = List.copyOf(selectItems);
     groupBy = List.copyOf(groupBy);
     orderBy = List.copyOf(orderBy);
+    joins = List.copyOf(joins);
   }
 
   public SelectStatement(String raw) {
@@ -29,7 +31,8 @@ public record SelectStatement(
         new UnknownExpression(""),
         List.of(),
         new UnknownExpression(""),
-        new UnknownExpression(""));
+        new UnknownExpression(""),
+        List.of());
   }
 
   public SelectStatement(String raw, List<Expression> selectItems, String from, Expression where) {
@@ -42,8 +45,11 @@ public record SelectStatement(
         new UnknownExpression(""),
         List.of(),
         new UnknownExpression(""),
-        new UnknownExpression(""));
+        new UnknownExpression(""),
+        List.of());
   }
 
   public record OrderByItem(Expression expression, String direction) {}
+
+  public record JoinItem(String kind, String table, Expression on) {}
 }

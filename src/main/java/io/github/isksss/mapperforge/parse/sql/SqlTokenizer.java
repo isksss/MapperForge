@@ -50,6 +50,15 @@ public final class SqlTokenizer {
           "OFFSET",
           "ASC",
           "DESC",
+          "JOIN",
+          "LEFT",
+          "RIGHT",
+          "FULL",
+          "INNER",
+          "OUTER",
+          "CROSS",
+          "ON",
+          "RETURNING",
           "JSON");
 
   private final String sql;

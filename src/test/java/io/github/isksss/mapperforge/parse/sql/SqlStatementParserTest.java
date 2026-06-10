@@ -79,6 +79,23 @@ final class SqlStatementParserTest {
   }
 
   @Test
+  void parsesSelectJoins() {
+    SelectStatement statement =
+        (SelectStatement)
+            parse(
+                "select u.id from users u left join orders o on o.user_id = u.id "
+                    + "inner join profiles p on p.user_id = u.id where o.total > 0");
+
+    assertEquals("users u", statement.from());
+    assertEquals(2, statement.joins().size());
+    assertEquals("LEFT JOIN", statement.joins().get(0).kind());
+    assertEquals("orders o", statement.joins().get(0).table());
+    assertInstanceOf(BinaryExpression.class, statement.joins().get(0).on());
+    assertEquals("INNER JOIN", statement.joins().get(1).kind());
+    assertEquals("profiles p", statement.joins().get(1).table());
+  }
+
+  @Test
   void parsesInsertColumnsAndValues() {
     InsertStatement statement =
         (InsertStatement) parse("insert into users (id, name) values (#{id}, #{name})");
@@ -87,6 +104,21 @@ final class SqlStatementParserTest {
     assertEquals(java.util.List.of("id", "name"), statement.columns());
     assertEquals(2, statement.values().size());
     assertInstanceOf(PlaceholderExpression.class, statement.values().get(0));
+  }
+
+  @Test
+  void parsesInsertSelectAndReturning() {
+    InsertStatement statement =
+        (InsertStatement)
+            parse(
+                "insert into archived_users (id, name) select id, name from users where active = 0 "
+                    + "returning id, name");
+
+    assertEquals("archived_users", statement.table());
+    assertEquals(java.util.List.of("id", "name"), statement.columns());
+    assertInstanceOf(SelectStatement.class, statement.selectSource());
+    assertEquals(2, statement.returning().size());
+    assertEquals("id", ((ColumnExpression) statement.returning().getFirst()).name());
   }
 
   @Test

@@ -74,7 +74,14 @@ public final class SqlStatementParser {
     int limitIndex = topLevelKeyword("LIMIT", fromIndex + 1);
     int offsetIndex = topLevelKeyword("OFFSET", fromIndex + 1);
     List<Expression> selectItems = parseExpressionList(tokensBetween(1, fromIndex));
-    String from = tokensBetween(fromIndex + 1, nextClauseIndex(fromIndex)).strip();
+    int fromEnd = nextClauseIndex(fromIndex);
+    int firstJoinIndex = firstJoinIndex(fromIndex + 1, fromEnd);
+    String from =
+        firstJoinIndex >= 0
+            ? tokensBetween(fromIndex + 1, firstJoinIndex).strip()
+            : tokensBetween(fromIndex + 1, fromEnd).strip();
+    List<SelectStatement.JoinItem> joins =
+        firstJoinIndex >= 0 ? parseJoins(firstJoinIndex, fromEnd) : List.of();
     Expression where =
         whereIndex >= 0
             ? new SqlExpressionParser(tokensBetween(whereIndex + 1, nextClauseIndex(whereIndex)))
@@ -104,25 +111,38 @@ public final class SqlStatementParser {
                 .parse()
             : new UnknownExpression("");
     return new SelectStatement(
-        sql, selectItems, from, where, groupBy, having, orderBy, limit, offset);
+        sql, selectItems, from, where, groupBy, having, orderBy, limit, offset, joins);
   }
 
   private InsertStatement parseInsert() {
     int intoIndex = topLevelKeyword("INTO", 1);
     int valuesIndex = topLevelKeyword("VALUES", intoIndex + 1);
-    if (intoIndex < 0 || valuesIndex < 0 || intoIndex + 1 >= valuesIndex) {
+    int selectIndex = topLevelKeyword("SELECT", intoIndex + 1);
+    int returningIndex = topLevelKeyword("RETURNING", intoIndex + 1);
+    int sourceIndex = valuesIndex >= 0 ? valuesIndex : selectIndex;
+    if (intoIndex < 0 || sourceIndex < 0 || intoIndex + 1 >= sourceIndex) {
       return new InsertStatement(sql);
     }
     String table = tokens.get(intoIndex + 1).text();
     List<String> columns = List.of();
-    if (intoIndex + 2 < valuesIndex && "(".equals(tokens.get(intoIndex + 2).text())) {
-      columns = parseNameList(tokensBetween(intoIndex + 3, valuesIndex - 1));
+    if (intoIndex + 2 < sourceIndex && "(".equals(tokens.get(intoIndex + 2).text())) {
+      columns = parseNameList(tokensBetween(intoIndex + 3, sourceIndex - 1));
     }
     List<Expression> values = List.of();
-    if (valuesIndex + 1 < eofIndex() && "(".equals(tokens.get(valuesIndex + 1).text())) {
-      values = parseExpressionList(tokensBetween(valuesIndex + 2, eofIndex() - 1));
+    Statement selectSource = new UnknownStatement("");
+    int statementEnd = returningIndex >= 0 ? returningIndex : eofIndex();
+    if (valuesIndex >= 0
+        && valuesIndex + 1 < statementEnd
+        && "(".equals(tokens.get(valuesIndex + 1).text())) {
+      values = parseExpressionList(tokensBetween(valuesIndex + 2, statementEnd - 1));
+    } else if (selectIndex >= 0) {
+      selectSource = new SqlStatementParser(tokensBetween(selectIndex, statementEnd)).parse();
     }
-    return new InsertStatement(sql, table, columns, values);
+    List<Expression> returning =
+        returningIndex >= 0
+            ? parseExpressionList(tokensBetween(returningIndex + 1, eofIndex()))
+            : List.of();
+    return new InsertStatement(sql, table, columns, values, selectSource, returning);
   }
 
   private UpdateStatement parseUpdate() {
@@ -208,6 +228,72 @@ public final class SqlStatementParser {
           new SqlExpressionParser(raw.substring(0, raw.length() - 4).strip()).parse(), "ASC");
     }
     return new SelectStatement.OrderByItem(new SqlExpressionParser(raw).parse(), "");
+  }
+
+  private List<SelectStatement.JoinItem> parseJoins(int start, int end) {
+    List<SelectStatement.JoinItem> joins = new ArrayList<>();
+    int currentJoin = start;
+    while (currentJoin >= 0 && currentJoin < end) {
+      int nextJoin = nextJoinIndex(currentJoin + 1, end);
+      joins.add(parseJoin(currentJoin, nextJoin >= 0 ? nextJoin : end));
+      currentJoin = nextJoin;
+    }
+    return List.copyOf(joins);
+  }
+
+  private SelectStatement.JoinItem parseJoin(int start, int end) {
+    int joinKeyword = joinKeywordIndex(start, end);
+    int onIndex = topLevelKeyword("ON", joinKeyword + 1);
+    if (joinKeyword < 0 || onIndex < 0 || onIndex >= end) {
+      return new SelectStatement.JoinItem(
+          tokensBetween(start, Math.min(start + 1, end)), "", new UnknownExpression(""));
+    }
+    String kind = tokensBetween(start, joinKeyword + 1).strip().toUpperCase(java.util.Locale.ROOT);
+    String table = tokensBetween(joinKeyword + 1, onIndex).strip();
+    Expression on = new SqlExpressionParser(tokensBetween(onIndex + 1, end)).parse();
+    return new SelectStatement.JoinItem(kind, table, on);
+  }
+
+  private int firstJoinIndex(int start, int end) {
+    return nextJoinIndex(start, end);
+  }
+
+  private int nextJoinIndex(int start, int end) {
+    for (int i = start; i < end; i++) {
+      if (isJoinStart(i, end)) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  private boolean isJoinStart(int index, int end) {
+    if (tokens.get(index).type() != TokenType.KEYWORD) {
+      return false;
+    }
+    if ("JOIN".equals(tokens.get(index).text())) {
+      return index == 0
+          || tokens.get(index - 1).type() != TokenType.KEYWORD
+          || !Set.of("LEFT", "RIGHT", "FULL", "INNER", "CROSS", "OUTER")
+              .contains(tokens.get(index - 1).text());
+    }
+    return Set.of("LEFT", "RIGHT", "FULL", "INNER", "CROSS").contains(tokens.get(index).text())
+        && index + 1 < end
+        && tokens.get(index + 1).type() == TokenType.KEYWORD
+        && ("JOIN".equals(tokens.get(index + 1).text())
+            || ("OUTER".equals(tokens.get(index + 1).text())
+                && index + 2 < end
+                && tokens.get(index + 2).type() == TokenType.KEYWORD
+                && "JOIN".equals(tokens.get(index + 2).text())));
+  }
+
+  private int joinKeywordIndex(int start, int end) {
+    for (int i = start; i < end; i++) {
+      if (tokens.get(i).type() == TokenType.KEYWORD && "JOIN".equals(tokens.get(i).text())) {
+        return i;
+      }
+    }
+    return -1;
   }
 
   private List<UpdateStatement.Assignment> parseAssignments(String raw) {
