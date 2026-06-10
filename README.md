@@ -18,3 +18,9 @@ mapperForge {
 ./gradlew mapperForgeCheck
 ./gradlew mapperForgeDryRun
 ```
+
+Dockerized MyBatis integration tests:
+
+```bash
+./gradlew integrationTest
+```

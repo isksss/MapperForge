@@ -13,6 +13,12 @@ java {
     }
 }
 
+val integrationTestSourceSet =
+    sourceSets.create("integrationTest") {
+        compileClasspath += sourceSets.main.get().output
+        runtimeClasspath += output + compileClasspath + configurations.runtimeClasspath.get()
+    }
+
 dependencies {
     implementation("com.fasterxml.woodstox:woodstox-core:7.1.1")
     implementation("org.slf4j:slf4j-api:2.0.17")
@@ -20,6 +26,16 @@ dependencies {
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.14.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    "integrationTestImplementation"(sourceSets.main.get().output)
+    "integrationTestImplementation"("org.junit.jupiter:junit-jupiter:5.14.1")
+    "integrationTestImplementation"("org.mybatis:mybatis:3.5.19")
+    "integrationTestImplementation"("org.testcontainers:junit-jupiter:1.21.4")
+    "integrationTestImplementation"("org.testcontainers:postgresql:1.21.4")
+    "integrationTestImplementation"("org.testcontainers:mysql:1.21.4")
+    "integrationTestImplementation"("org.postgresql:postgresql:42.7.11")
+    "integrationTestImplementation"("com.mysql:mysql-connector-j:9.7.0")
+    "integrationTestRuntimeOnly"("org.junit.platform:junit-platform-launcher")
 }
 
 gradlePlugin {
@@ -32,6 +48,15 @@ gradlePlugin {
 }
 
 tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
+val integrationTest by tasks.registering(Test::class) {
+    description = "Runs MyBatis integration tests against Dockerized PostgreSQL and MySQL."
+    group = "verification"
+    testClassesDirs = integrationTestSourceSet.output.classesDirs
+    classpath = integrationTestSourceSet.runtimeClasspath
+    shouldRunAfter(tasks.test)
     useJUnitPlatform()
 }
 

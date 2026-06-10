@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -31,6 +32,7 @@ public final class MapperXmlFormatter {
           "trim",
           "where",
           "set");
+  private static final Pattern DOCTYPE_PATTERN = Pattern.compile("<!DOCTYPE\\s+[^>]+>");
 
   private final OgnlFormatter ognlFormatter = new OgnlFormatter();
   private final SqlFormatter sqlFormatter = new SqlFormatter();
@@ -41,6 +43,7 @@ public final class MapperXmlFormatter {
       XMLStreamReader reader =
           factory.createXMLStreamReader(source.fileName(), new StringReader(source.content()));
       StringBuilder out = new StringBuilder(source.content().length() + 128);
+      extractDoctype(source.content()).ifPresent(out::append);
       ArrayDeque<String> stack = new ArrayDeque<>();
       boolean rootSeen = false;
       boolean lastWasStart = false;
@@ -50,6 +53,9 @@ public final class MapperXmlFormatter {
         switch (event) {
           case XMLStreamConstants.START_ELEMENT -> {
             if (!rootSeen) {
+              if (!out.isEmpty()) {
+                newline(out, stack.size(), config);
+              }
               rootSeen = true;
             } else {
               newline(out, stack.size(), config);
@@ -74,6 +80,9 @@ public final class MapperXmlFormatter {
           case XMLStreamConstants.COMMENT -> {
             newline(out, stack.size(), config);
             out.append("<!--").append(reader.getText()).append("-->");
+            lastWasStart = false;
+          }
+          case XMLStreamConstants.DTD -> {
             lastWasStart = false;
           }
           case XMLStreamConstants.END_ELEMENT -> {
@@ -168,6 +177,14 @@ public final class MapperXmlFormatter {
     newline(out, depth, config);
     String text = config.formatSqlInsideCdata() ? sqlFormatter.format(raw, config) : raw.strip();
     out.append("<![CDATA[").append(text).append("]]>");
+  }
+
+  private java.util.Optional<String> extractDoctype(String content) {
+    var matcher = DOCTYPE_PATTERN.matcher(content);
+    if (matcher.find()) {
+      return java.util.Optional.of(matcher.group().strip());
+    }
+    return java.util.Optional.empty();
   }
 
   private void newline(StringBuilder out, int depth, FormatterConfig config) {
