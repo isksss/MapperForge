@@ -58,6 +58,7 @@ public final class SqlTokenizer {
           "OUTER",
           "CROSS",
           "ON",
+          "USING",
           "RETURNING",
           "JSON");
 

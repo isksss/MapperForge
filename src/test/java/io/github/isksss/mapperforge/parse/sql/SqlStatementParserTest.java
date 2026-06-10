@@ -107,6 +107,18 @@ final class SqlStatementParserTest {
   }
 
   @Test
+  void parsesInsertMultipleValueRows() {
+    InsertStatement statement =
+        (InsertStatement) parse("insert into users (id, name) values (1, 'a'), (2, 'b')");
+
+    assertEquals("users", statement.table());
+    assertEquals(2, statement.valueRows().size());
+    assertEquals(2, statement.valueRows().getFirst().size());
+    assertEquals("1", ((LiteralExpression) statement.valueRows().getFirst().getFirst()).value());
+    assertEquals("b", ((LiteralExpression) statement.valueRows().get(1).get(1)).value());
+  }
+
+  @Test
   void parsesInsertSelectAndReturning() {
     InsertStatement statement =
         (InsertStatement)
@@ -142,6 +154,21 @@ final class SqlStatementParserTest {
     BinaryExpression where = assertInstanceOf(BinaryExpression.class, statement.where());
     assertEquals("=", where.operator());
     assertInstanceOf(LiteralExpression.class, where.right());
+  }
+
+  @Test
+  void parsesDeleteUsingAndReturning() {
+    DeleteStatement statement =
+        (DeleteStatement)
+            parse(
+                "delete from users using archived_users au "
+                    + "where users.id = au.id returning users.id");
+
+    assertEquals("users", statement.table());
+    assertEquals("archived_users au", statement.using());
+    assertInstanceOf(BinaryExpression.class, statement.where());
+    assertEquals(1, statement.returning().size());
+    assertEquals("users.id", ((ColumnExpression) statement.returning().getFirst()).name());
   }
 
   @Test

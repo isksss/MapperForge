@@ -12,13 +12,13 @@ PLAN.local.md は `INSERT`、`UPDATE`、`DELETE` を SQL Statement Parser の対
 
 `InsertStatement`、`UpdateStatement`、`DeleteStatement` に主要句を追加する。
 
-- `InsertStatement`: `table`、`columns`、`values`
+- `InsertStatement`: `table`、`columns`、`values`、`valueRows`
 - `InsertStatement`: `selectSource`、`returning`
 - `UpdateStatement`: `table`、`assignments`、`where`
-- `DeleteStatement`: `table`、`where`
+- `DeleteStatement`: `table`、`using`、`where`、`returning`
 
-Parser は top-level の `INTO`、`VALUES`、`SELECT`、`RETURNING`、`SET`、`FROM`、`WHERE` を句境界として扱い、値や条件式は `SqlExpressionParser` に渡す。`INSERT ... SELECT` の source は `Statement` として保持する。既存互換のため、raw のみを受け取る constructor は残す。
+Parser は top-level の `INTO`、`VALUES`、`SELECT`、`RETURNING`、`SET`、`FROM`、`USING`、`WHERE` を句境界として扱い、値や条件式は `SqlExpressionParser` に渡す。`INSERT ... SELECT` の source は `Statement` として保持し、複数行 `VALUES` は `valueRows` として保持する。既存互換のため、raw のみを受け取る constructor は残す。
 
 ## Consequences
 
-DML の placeholder、代入値、WHERE 条件、`INSERT ... SELECT`、`RETURNING` を AST として検証・printer へ渡せるようになる。複数行 `VALUES`、`DELETE ... USING`、方言固有句は golden file test を追加しながら段階的に拡張する。
+DML の placeholder、代入値、WHERE 条件、複数行 `VALUES`、`INSERT ... SELECT`、`DELETE ... USING`、`RETURNING` を AST として検証・printer へ渡せるようになる。方言固有句は golden file test を追加しながら段階的に拡張する。

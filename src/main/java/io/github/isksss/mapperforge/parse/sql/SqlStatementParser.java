@@ -129,12 +129,12 @@ public final class SqlStatementParser {
       columns = parseNameList(tokensBetween(intoIndex + 3, sourceIndex - 1));
     }
     List<Expression> values = List.of();
+    List<List<Expression>> valueRows = List.of();
     Statement selectSource = new UnknownStatement("");
     int statementEnd = returningIndex >= 0 ? returningIndex : eofIndex();
-    if (valuesIndex >= 0
-        && valuesIndex + 1 < statementEnd
-        && "(".equals(tokens.get(valuesIndex + 1).text())) {
-      values = parseExpressionList(tokensBetween(valuesIndex + 2, statementEnd - 1));
+    if (valuesIndex >= 0) {
+      valueRows = parseValueRows(valuesIndex + 1, statementEnd);
+      values = valueRows.isEmpty() ? List.of() : valueRows.getFirst();
     } else if (selectIndex >= 0) {
       selectSource = new SqlStatementParser(tokensBetween(selectIndex, statementEnd)).parse();
     }
@@ -142,7 +142,7 @@ public final class SqlStatementParser {
         returningIndex >= 0
             ? parseExpressionList(tokensBetween(returningIndex + 1, eofIndex()))
             : List.of();
-    return new InsertStatement(sql, table, columns, values, selectSource, returning);
+    return new InsertStatement(sql, table, columns, values, valueRows, selectSource, returning);
   }
 
   private UpdateStatement parseUpdate() {
@@ -169,15 +169,24 @@ public final class SqlStatementParser {
       return new DeleteStatement(sql);
     }
     int whereIndex = topLevelKeyword("WHERE", fromIndex + 1);
-    String table =
-        whereIndex >= 0
-            ? tokensBetween(fromIndex + 1, whereIndex).strip()
-            : tokensBetween(fromIndex + 1, eofIndex()).strip();
+    int usingIndex = topLevelKeyword("USING", fromIndex + 1);
+    int returningIndex = topLevelKeyword("RETURNING", fromIndex + 1);
+    String table = tokensBetween(fromIndex + 1, nextDeleteClauseIndex(fromIndex)).strip();
+    String using =
+        usingIndex >= 0
+            ? tokensBetween(usingIndex + 1, nextDeleteClauseIndex(usingIndex)).strip()
+            : "";
     Expression where =
         whereIndex >= 0
-            ? new SqlExpressionParser(tokensBetween(whereIndex + 1, eofIndex())).parse()
+            ? new SqlExpressionParser(
+                    tokensBetween(whereIndex + 1, nextDeleteClauseIndex(whereIndex)))
+                .parse()
             : new UnknownExpression("");
-    return new DeleteStatement(sql, table, where);
+    List<Expression> returning =
+        returningIndex >= 0
+            ? parseExpressionList(tokensBetween(returningIndex + 1, eofIndex()))
+            : List.of();
+    return new DeleteStatement(sql, table, using, where, returning);
   }
 
   private List<Expression> parseExpressionList(String raw) {
@@ -200,6 +209,39 @@ public final class SqlStatementParser {
       expressions.add(new SqlExpressionParser(tail).parse());
     }
     return List.copyOf(expressions);
+  }
+
+  private List<List<Expression>> parseValueRows(int start, int end) {
+    List<List<Expression>> rows = new ArrayList<>();
+    int index = start;
+    while (index < end) {
+      if (!"(".equals(tokens.get(index).text())) {
+        index++;
+        continue;
+      }
+      int close = matchingParenIndex(index, end);
+      if (close < 0) {
+        break;
+      }
+      rows.add(parseExpressionList(tokensBetween(index + 1, close)));
+      index = close + 1;
+    }
+    return List.copyOf(rows);
+  }
+
+  private int matchingParenIndex(int openIndex, int end) {
+    int depth = 0;
+    for (int i = openIndex; i < end; i++) {
+      if (tokens.get(i).type() == TokenType.SYMBOL && "(".equals(tokens.get(i).text())) {
+        depth++;
+      } else if (tokens.get(i).type() == TokenType.SYMBOL && ")".equals(tokens.get(i).text())) {
+        depth--;
+        if (depth == 0) {
+          return i;
+        }
+      }
+    }
+    return -1;
   }
 
   private List<String> parseNameList(String raw) {
@@ -370,6 +412,18 @@ public final class SqlStatementParser {
             topLevelKeywordPair("ORDER", "BY", currentClauseIndex + 1),
             topLevelKeyword("LIMIT", currentClauseIndex + 1),
             topLevelKeyword("OFFSET", currentClauseIndex + 1),
+            eofIndex())
+        .stream()
+        .filter(index -> index > currentClauseIndex)
+        .min(Integer::compareTo)
+        .orElse(eofIndex());
+  }
+
+  private int nextDeleteClauseIndex(int currentClauseIndex) {
+    return List.of(
+            topLevelKeyword("USING", currentClauseIndex + 1),
+            topLevelKeyword("WHERE", currentClauseIndex + 1),
+            topLevelKeyword("RETURNING", currentClauseIndex + 1),
             eofIndex())
         .stream()
         .filter(index -> index > currentClauseIndex)
