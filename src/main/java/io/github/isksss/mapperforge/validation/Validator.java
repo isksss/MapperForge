@@ -9,6 +9,7 @@ import io.github.isksss.mapperforge.ast.mapper.TextNode;
 import io.github.isksss.mapperforge.ast.mapper.TextType;
 import io.github.isksss.mapperforge.config.FormatterConfig;
 import io.github.isksss.mapperforge.parse.MapperXmlParser;
+import io.github.isksss.mapperforge.parse.sql.PlaceholderParser;
 import io.github.isksss.mapperforge.source.SourceFile;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,18 +21,25 @@ public final class Validator {
   private static final Pattern COMMENT = Pattern.compile("<!--.*?-->", Pattern.DOTALL);
   private static final Pattern CDATA = Pattern.compile("<!\\[CDATA\\[.*?]]>", Pattern.DOTALL);
   private final MapperXmlParser parser = new MapperXmlParser();
+  private final PlaceholderParser placeholderParser = new PlaceholderParser();
 
   public ValidationResult validate(SourceFile before, SourceFile after, FormatterConfig config) {
     List<ValidationError> errors = new ArrayList<>();
     compareAst(before, after, errors);
-    compare(
-        "placeholder",
-        PLACEHOLDER,
-        before.content(),
-        after.content(),
-        ErrorType.PLACEHOLDER,
-        errors);
+    comparePlaceholders(before.content(), after.content(), errors);
     return new ValidationResult(errors.isEmpty(), List.copyOf(errors));
+  }
+
+  private void comparePlaceholders(String before, String after, List<ValidationError> errors) {
+    var beforePlaceholders =
+        find(PLACEHOLDER, before).stream().map(placeholderParser::parse).toList();
+    var afterPlaceholders =
+        find(PLACEHOLDER, after).stream().map(placeholderParser::parse).toList();
+    if (!beforePlaceholders.equals(afterPlaceholders)) {
+      errors.add(
+          new ValidationError(
+              ErrorType.PLACEHOLDER, "Formatted XML changed placeholder sequence", null));
+    }
   }
 
   private void compareAst(SourceFile before, SourceFile after, List<ValidationError> errors) {

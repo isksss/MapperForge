@@ -70,4 +70,20 @@ final class ValidatorTest {
     assertFalse(result.success());
     assertEquals(ErrorType.CDATA, result.errors().getFirst().type());
   }
+
+  @Test
+  void rejectsPlaceholderOptionChanges() {
+    SourceFile before =
+        new SourceFile(
+            "before.xml",
+            "<mapper namespace=\"sample\"><select id=\"find\">select * from users where id = #{id,jdbcType=BIGINT}</select></mapper>");
+    SourceFile after =
+        new SourceFile(
+            "after.xml",
+            "<mapper namespace=\"sample\"><select id=\"find\">select * from users where id = #{id,jdbcType=VARCHAR}</select></mapper>");
+
+    ValidationResult result = validator.validate(before, after, FormatterConfig.defaults());
+
+    assertEquals(ErrorType.PLACEHOLDER, result.errors().getFirst().type());
+  }
 }
