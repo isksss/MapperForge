@@ -3,6 +3,8 @@ package io.github.isksss.mapperforge.validation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.github.isksss.mapperforge.error.ErrorCode;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 final class ValidationErrorTest {
@@ -19,5 +21,35 @@ final class ValidationErrorTest {
         new ValidationError(ErrorCode.OGNL_ERROR, ErrorType.EXPRESSION, "message", null);
 
     assertEquals(ErrorCode.OGNL_ERROR, error.code());
+  }
+
+  @Test
+  void errorCodesMatchPlanClassificationOrder() {
+    assertEquals(
+        List.of(
+            "PARSER_ERROR",
+            "TOKENIZER_ERROR",
+            "OGNL_ERROR",
+            "FORMAT_ERROR",
+            "VALIDATION_ERROR",
+            "CONFIG_ERROR",
+            "IO_ERROR",
+            "INTERNAL_ERROR"),
+        Arrays.stream(ErrorCode.values()).map(Enum::name).toList());
+  }
+
+  @Test
+  void errorTypesCoverValidationDifferenceKinds() {
+    assertEquals(
+        List.of(
+            "STATEMENT",
+            "EXPRESSION",
+            "COMMENT",
+            "CDATA",
+            "WHITESPACE",
+            "PLACEHOLDER",
+            "GENERIC_ELEMENT",
+            "XML"),
+        Arrays.stream(ErrorType.values()).map(Enum::name).toList());
   }
 }
