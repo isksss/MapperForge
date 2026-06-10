@@ -32,6 +32,8 @@ See [docs/configuration.md](docs/configuration.md) for all configuration options
 
 See [docs/tasks.md](docs/tasks.md) for task behavior.
 
+See [docs/traceability.md](docs/traceability.md) for the PLAN-to-implementation traceability map.
+
 ## GitHub Packages
 
 MapperForge can be consumed as a Gradle plugin from GitHub Packages.
