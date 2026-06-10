@@ -11,6 +11,7 @@ import io.github.isksss.mapperforge.source.SourceFile;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import org.gradle.api.DefaultTask;
@@ -153,7 +154,17 @@ public abstract class MapperForgeTask extends DefaultTask {
               failed = true;
               getLogger().error("MapperForge formatting required: {}", file);
             }
-            case DRY_RUN -> getLogger().lifecycle("MapperForge would format: {}", file);
+            case DRY_RUN -> {
+              String relativePath = relativePath(file.toPath());
+              getLogger()
+                  .lifecycle(
+                      getMapperForge()
+                          .diff(
+                              new SourceFile(relativePath, before),
+                              new SourceFile(relativePath, after),
+                              config)
+                          .stripTrailing());
+            }
           }
         }
       } catch (IOException e) {
@@ -191,5 +202,9 @@ public abstract class MapperForgeTask extends DefaultTask {
     } catch (IOException e) {
       throw new GradleException("Failed to read " + path, e);
     }
+  }
+
+  private String relativePath(Path path) {
+    return getProject().getProjectDir().toPath().relativize(path).toString();
   }
 }

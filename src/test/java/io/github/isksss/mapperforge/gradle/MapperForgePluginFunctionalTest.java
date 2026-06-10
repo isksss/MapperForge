@@ -58,6 +58,29 @@ final class MapperForgePluginFunctionalTest {
   }
 
   @Test
+  void dryRunPrintsUnifiedDiff() throws IOException {
+    writeProject();
+    Path mapper = projectDir.resolve("src/main/resources/sample/UserMapper.xml");
+    Files.createDirectories(mapper.getParent());
+    Files.writeString(
+        mapper,
+        "<mapper namespace=\"sample.UserMapper\"><select id=\"find\">select id from users</select></mapper>",
+        StandardCharsets.UTF_8);
+
+    var result =
+        GradleRunner.create()
+            .withProjectDir(projectDir.toFile())
+            .withPluginClasspath()
+            .withArguments("mapperForgeDryRun")
+            .build();
+
+    assertEquals(TaskOutcome.SUCCESS, result.task(":mapperForgeDryRun").getOutcome());
+    assertTrue(result.getOutput().contains("--- src/main/resources/sample/UserMapper.xml"));
+    assertTrue(result.getOutput().contains("+++ src/main/resources/sample/UserMapper.xml"));
+    assertTrue(result.getOutput().contains("+        SELECT"));
+  }
+
+  @Test
   void yamlConfigProvidesDefaultsAndGradleDslOverridesIt() throws IOException {
     Files.writeString(
         projectDir.resolve("mapperforge.yml"),
