@@ -57,7 +57,7 @@ This document maps the main `PLAN.local.md` requirements to implementation and v
 | Immutable AST and setter prohibition | `ast/*`, `ElementNode`, SQL/OGNL list AST records, `AstImmutabilityTest` |
 | Dedicated MyBatis nodes | `ast/mapper/*ElementNode.java`, `MapperXmlParserTest` |
 | `GenericElement` fallback | `GenericElementNode`, `MapperXmlParserTest`, `ValidatorTest` |
-| `TextNode`, `CommentNode`, `CDataNode` | `ast/mapper`, golden files, `ValidatorTest` |
+| `TextNode`, `CommentNode`, `CDataNode` | `ast/mapper`, `MapperAstLeafNodeTest`, golden files, `ValidatorTest` |
 | Placeholder parser | `PlaceholderParser`, `PlaceholderExpression`, `PlaceholderParserTest` |
 | Source position records | `SourceFile`, `Position`, `Range`, `Token`, `SourceModelTest` |
 
