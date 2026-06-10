@@ -5,12 +5,14 @@ plugins {
 }
 
 group = "io.github.isksss"
-version = "0.1.0-SNAPSHOT"
+version = providers.gradleProperty("releaseVersion").orElse("0.1.0-SNAPSHOT").get()
 
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
+    withSourcesJar()
+    withJavadocJar()
 }
 
 val integrationTestSourceSet =
@@ -39,10 +41,60 @@ dependencies {
 }
 
 gradlePlugin {
+    website = "https://github.com/isksss/MapperForge"
+    vcsUrl = "https://github.com/isksss/MapperForge"
     plugins {
         create("mapperForge") {
             id = "io.github.isksss.mapperforge"
+            displayName = "MapperForge"
+            description = "Formats and checks MyBatis Mapper XML files."
             implementationClass = "io.github.isksss.mapperforge.gradle.MapperForgePlugin"
+            tags = listOf("mybatis", "mapper", "xml", "formatter")
+        }
+    }
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/isksss/MapperForge")
+            credentials {
+                username =
+                    providers
+                        .gradleProperty("gpr.user")
+                        .orElse(providers.environmentVariable("GITHUB_ACTOR"))
+                        .orNull
+                password =
+                    providers
+                        .gradleProperty("gpr.key")
+                        .orElse(providers.environmentVariable("GITHUB_TOKEN"))
+                        .orNull
+            }
+        }
+    }
+    publications.withType<MavenPublication>().configureEach {
+        pom {
+            name = "MapperForge"
+            description = "Formats and checks MyBatis Mapper XML files."
+            url = "https://github.com/isksss/MapperForge"
+            licenses {
+                license {
+                    name = "MIT License"
+                    url = "https://opensource.org/licenses/MIT"
+                }
+            }
+            developers {
+                developer {
+                    id = "isksss"
+                    name = "isksss"
+                }
+            }
+            scm {
+                connection = "scm:git:git://github.com/isksss/MapperForge.git"
+                developerConnection = "scm:git:ssh://github.com/isksss/MapperForge.git"
+                url = "https://github.com/isksss/MapperForge"
+            }
         }
     }
 }
