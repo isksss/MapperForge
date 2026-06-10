@@ -1,0 +1,1 @@
+<mapper namespace="sample.UserMapper"><select id="find" resultType="User">select id from users where min_age <![CDATA[<]]> #{age} and max_age <![CDATA[>]]> #{age} and flags <![CDATA[&]]> #{mask}</select></mapper>
