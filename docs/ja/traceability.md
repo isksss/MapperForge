@@ -54,7 +54,7 @@
 | --- | --- |
 | Woodstox XML parser | `MapperXmlParser` |
 | Hybrid mapper AST | `ast/mapper/*`, `MapperXmlParserTest` |
-| Immutable AST and setter prohibition | `ast/*`, `AstImmutabilityTest` |
+| Immutable AST and setter prohibition | `ast/*`, `ElementNode`, `AstImmutabilityTest` |
 | Dedicated MyBatis nodes | `ast/mapper/*ElementNode.java`, `MapperXmlParserTest` |
 | `GenericElement` fallback | `GenericElementNode`, `MapperXmlParserTest`, `ValidatorTest` |
 | `TextNode`, `CommentNode`, `CDataNode` | `ast/mapper`, golden files, `ValidatorTest` |
