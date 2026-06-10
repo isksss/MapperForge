@@ -67,7 +67,7 @@
 | --- | --- |
 | SQL tokenizer | `SqlTokenizer`, `SqlTokenizerTest`, `docs/ja/adr/0095-sql-tokenizer-public-contract.md` |
 | Statement parser | `SqlStatementParser`, `SqlStatementParserTest`, `docs/ja/adr/0096-sql-statement-parser-public-contract.md` |
-| Pratt expression parser | `SqlExpressionParser`, `SqlExpressionParserTest` |
+| Pratt expression parser | `SqlExpressionParser`, `SqlExpressionParserTest`, `docs/ja/adr/0097-sql-expression-parser-public-contract.md` |
 | `SELECT`, DML, `WITH`, set operations | `SqlStatementParserTest`, golden files |
 | SQL expression variants | `ast/sql/*`, `SqlExpressionParserTest` |
 | Unknown recovery | `UnknownStatement`, `UnknownExpression`, parser tests |

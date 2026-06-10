@@ -24,6 +24,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ * SQL expression を Pratt parser で expression AST へ変換する parser です。
+ *
+ * <p>外側の空白は取り除き、SQL コメントは構文解析から除外します。未対応または不正な expression は例外ではなく {@link UnknownExpression}
+ * として返します。
+ */
 public final class SqlExpressionParser {
   private static final Map<String, Integer> PRECEDENCE =
       Map.ofEntries(
@@ -46,6 +52,11 @@ public final class SqlExpressionParser {
   private final List<Token> tokens;
   private int current;
 
+  /**
+   * SQL expression parser を作成します。
+   *
+   * @param sql 解析する SQL expression
+   */
   public SqlExpressionParser(String sql) {
     this.sql = sql.strip();
     this.tokens =
@@ -53,6 +64,11 @@ public final class SqlExpressionParser {
             .tokenize().stream().filter(token -> token.type() != TokenType.COMMENT).toList();
   }
 
+  /**
+   * SQL expression を解析します。
+   *
+   * @return 解析結果の expression。未対応または不正な expression の場合は {@link UnknownExpression}
+   */
   public Expression parse() {
     try {
       Expression expression = parseExpression(0);

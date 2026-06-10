@@ -131,6 +131,30 @@ final class SqlExpressionParserTest {
     assertEquals("a + )", expression.raw());
   }
 
+  @Test
+  void stripsOuterWhitespaceAndIgnoresComments() {
+    BinaryExpression expression =
+        assertInstanceOf(
+            BinaryExpression.class,
+            parse(
+                """
+
+                -- leading comment
+                id = #{id} /* trailing comment */
+                """));
+
+    assertEquals("=", expression.operator());
+    assertColumn("id", expression.left());
+    assertInstanceOf(PlaceholderExpression.class, expression.right());
+  }
+
+  @Test
+  void blankSqlFallsBackToUnknownExpressionWithStrippedRawSql() {
+    UnknownExpression expression = assertInstanceOf(UnknownExpression.class, parse(" \n\t "));
+
+    assertEquals("", expression.raw());
+  }
+
   private static Expression parse(String sql) {
     return new SqlExpressionParser(sql).parse();
   }
