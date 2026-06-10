@@ -83,8 +83,10 @@ public final class SqlTokenizer {
       char current = peek();
       if (Character.isWhitespace(current)) {
         advance();
-      } else if (current == '\'' || current == '"') {
+      } else if (current == '\'') {
         tokens.add(string());
+      } else if (current == '"' || current == '`') {
+        tokens.add(quotedIdentifier());
       } else if (startsWith("#{") || startsWith("${")) {
         tokens.add(placeholder());
       } else if (isIdentifierStart(current)) {
@@ -106,11 +108,25 @@ public final class SqlTokenizer {
     while (!isAtEnd() && isIdentifierPart(peek())) {
       advance();
     }
+    while (consumeIdentifierPartChain()) {
+      // Consume dotted quoted/unquoted identifier parts as one logical name.
+    }
     String raw = sql.substring(startIndex, index);
     String upper = raw.toUpperCase(Locale.ROOT);
     TokenType type = KEYWORDS.contains(upper) ? TokenType.KEYWORD : TokenType.IDENTIFIER;
     String text = type == TokenType.KEYWORD ? upper : raw;
     return new Token(type, text, new Range(start, position()));
+  }
+
+  private Token quotedIdentifier() {
+    Position start = position();
+    int startIndex = index;
+    quotedIdentifierPart();
+    while (consumeIdentifierPartChain()) {
+      // Consume dotted quoted/unquoted identifier parts as one logical name.
+    }
+    return new Token(
+        TokenType.IDENTIFIER, sql.substring(startIndex, index), new Range(start, position()));
   }
 
   private Token number() {
@@ -137,6 +153,20 @@ public final class SqlTokenizer {
     }
     return new Token(
         TokenType.STRING, sql.substring(startIndex, index), new Range(start, position()));
+  }
+
+  private void quotedIdentifierPart() {
+    char quote = advance();
+    while (!isAtEnd()) {
+      char current = advance();
+      if (current == quote) {
+        if (!isAtEnd() && peek() == quote) {
+          advance();
+        } else {
+          break;
+        }
+      }
+    }
   }
 
   private Token placeholder() {
@@ -166,6 +196,26 @@ public final class SqlTokenizer {
 
   private boolean isIdentifierPart(char value) {
     return Character.isLetterOrDigit(value) || value == '_' || value == '.';
+  }
+
+  private boolean consumeIdentifierPartChain() {
+    if (isAtEnd() || peek() != '.' || index + 1 >= sql.length()) {
+      return false;
+    }
+    char next = sql.charAt(index + 1);
+    if (next == '"' || next == '`') {
+      advance();
+      quotedIdentifierPart();
+      return true;
+    }
+    if (isIdentifierStart(next)) {
+      advance();
+      while (!isAtEnd() && isIdentifierPart(peek())) {
+        advance();
+      }
+      return true;
+    }
+    return false;
   }
 
   private boolean startsWith(String value) {

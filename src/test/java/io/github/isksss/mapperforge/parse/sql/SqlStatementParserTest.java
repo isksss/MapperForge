@@ -204,6 +204,19 @@ final class SqlStatementParserTest {
     assertEquals("name is not null", where.raw());
   }
 
+  @Test
+  void parsesQuotedIdentifiersInSelectStatement() {
+    SelectStatement statement =
+        (SelectStatement)
+            parse("select \"user\".\"id\", `user`.`name` from `user` where `user`.`id` = #{id}");
+
+    assertEquals("\"user\".\"id\"", ((ColumnExpression) statement.selectItems().get(0)).name());
+    assertEquals("`user`.`name`", ((ColumnExpression) statement.selectItems().get(1)).name());
+    assertEquals("`user`", statement.from());
+    BinaryExpression where = assertInstanceOf(BinaryExpression.class, statement.where());
+    assertEquals("`user`.`id`", ((ColumnExpression) where.left()).name());
+  }
+
   private Statement parse(String sql) {
     return new SqlStatementParser(sql).parse();
   }

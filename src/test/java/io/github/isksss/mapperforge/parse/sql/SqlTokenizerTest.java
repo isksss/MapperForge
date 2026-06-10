@@ -42,4 +42,16 @@ final class SqlTokenizerTest {
     assertEquals("SELECT", tokens.get(0).text());
     assertEquals("'from and where'", tokens.get(1).text());
   }
+
+  @Test
+  void tokenizesQuotedIdentifiersAsIdentifiers() {
+    var tokens = new SqlTokenizer("select \"user\".\"id\", `user`.`name` from `user`").tokenize();
+
+    assertEquals(TokenType.IDENTIFIER, tokens.get(1).type());
+    assertEquals("\"user\".\"id\"", tokens.get(1).text());
+    assertEquals(TokenType.IDENTIFIER, tokens.get(3).type());
+    assertEquals("`user`.`name`", tokens.get(3).text());
+    assertEquals(TokenType.IDENTIFIER, tokens.get(5).type());
+    assertEquals("`user`", tokens.get(5).text());
+  }
 }
