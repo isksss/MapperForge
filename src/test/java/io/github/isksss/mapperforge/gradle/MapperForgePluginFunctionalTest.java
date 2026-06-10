@@ -174,6 +174,31 @@ final class MapperForgePluginFunctionalTest {
   }
 
   @Test
+  void gradleDslRejectsInvalidFormatterVersion() throws IOException {
+    writeProject(
+        """
+        mapperForge {
+            formatterVersion = "latest"
+        }
+        """);
+    Path mapper = projectDir.resolve("src/main/resources/sample/UserMapper.xml");
+    Files.createDirectories(mapper.getParent());
+    Files.writeString(
+        mapper,
+        "<mapper namespace=\"sample.UserMapper\"><select id=\"find\">select id from users</select></mapper>",
+        StandardCharsets.UTF_8);
+
+    var result =
+        GradleRunner.create()
+            .withProjectDir(projectDir.toFile())
+            .withPluginClasspath()
+            .withArguments("mapperForgeFormat")
+            .buildAndFail();
+
+    assertTrue(result.getOutput().contains("formatterVersion must be SemVer: latest"));
+  }
+
+  @Test
   void formatTaskFailsWhenStrictValidationFails() throws IOException {
     writeProject(
         """

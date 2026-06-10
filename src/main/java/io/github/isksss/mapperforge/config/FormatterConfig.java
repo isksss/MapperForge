@@ -20,6 +20,12 @@ public record FormatterConfig(
     boolean formatSqlInsideCdata,
     boolean strict,
     Map<String, List<String>> attributeOrder) {
+  public FormatterConfig {
+    if (!isSemVer(formatterVersion)) {
+      throw new IllegalArgumentException("formatterVersion must be SemVer: " + formatterVersion);
+    }
+  }
+
   public static FormatterConfig defaults() {
     return new FormatterConfig(
         Dialect.POSTGRESQL,
@@ -38,5 +44,15 @@ public record FormatterConfig(
         false,
         true,
         Map.of());
+  }
+
+  private static boolean isSemVer(String value) {
+    if (value == null) {
+      return false;
+    }
+    return value.matches(
+        "(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)"
+            + "(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?"
+            + "(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?");
   }
 }

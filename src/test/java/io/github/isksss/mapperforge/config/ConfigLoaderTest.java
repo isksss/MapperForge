@@ -1,6 +1,7 @@
 package io.github.isksss.mapperforge.config;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -47,5 +48,16 @@ final class ConfigLoaderTest {
     FormatterConfig loaded = new ConfigLoader().load(tempDir.resolve("missing.yml"));
 
     assertEquals(FormatterConfig.defaults(), loaded);
+  }
+
+  @Test
+  void rejectsInvalidFormatterVersion() throws IOException {
+    Path config = tempDir.resolve("mapperforge.yml");
+    Files.writeString(config, "formatterVersion: latest\n", StandardCharsets.UTF_8);
+
+    IllegalArgumentException error =
+        assertThrows(IllegalArgumentException.class, () -> new ConfigLoader().load(config));
+
+    assertEquals("formatterVersion must be SemVer: latest", error.getMessage());
   }
 }
