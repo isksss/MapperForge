@@ -32,6 +32,29 @@ final class ValidatorTest {
   }
 
   @Test
+  void rejectsWhitespaceChangesWhenPreserveWhitespaceIsEnabled() {
+    SourceFile before =
+        new SourceFile(
+            "before.xml",
+            "<mapper namespace=\"sample\"><select id=\"find\">select id from users</select></mapper>");
+    SourceFile after =
+        new SourceFile(
+            "after.xml",
+            """
+            <mapper namespace="sample">
+                <select id="find">
+                    select id from users
+                </select>
+            </mapper>
+            """);
+
+    ValidationResult result = validator.validate(before, after, preserveWhitespaceConfig());
+
+    assertFalse(result.success());
+    assertEquals(ErrorType.WHITESPACE, result.errors().getFirst().type());
+  }
+
+  @Test
   void rejectsGenericElementAttributeChanges() {
     SourceFile before =
         new SourceFile("before.xml", "<mapper namespace=\"sample\"><unknown a=\"1\"/></mapper>");
@@ -170,5 +193,26 @@ final class ValidatorTest {
     assertFalse(result.success());
     assertEquals(ErrorType.EXPRESSION, result.errors().getFirst().type());
     assertEquals(ErrorCode.VALIDATION_ERROR, result.errors().getFirst().code());
+  }
+
+  private static FormatterConfig preserveWhitespaceConfig() {
+    FormatterConfig defaults = FormatterConfig.defaults();
+    return new FormatterConfig(
+        defaults.dialect(),
+        defaults.formatterVersion(),
+        defaults.include(),
+        defaults.exclude(),
+        defaults.indentSize(),
+        defaults.maxLineLength(),
+        defaults.lineEnding(),
+        defaults.sqlFormatStyle(),
+        defaults.sqlPrinter(),
+        defaults.tagWrapStyle(),
+        defaults.attributeLayout(),
+        true,
+        defaults.preserveCdata(),
+        defaults.formatSqlInsideCdata(),
+        defaults.strict(),
+        defaults.attributeOrder());
   }
 }

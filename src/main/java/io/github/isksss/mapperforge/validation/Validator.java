@@ -43,6 +43,7 @@ public final class Validator {
   private static final Pattern PLACEHOLDER = Pattern.compile("[$#]\\{[^}]+}");
   private static final Pattern COMMENT = Pattern.compile("<!--.*?-->", Pattern.DOTALL);
   private static final Pattern CDATA = Pattern.compile("<!\\[CDATA\\[.*?]]>", Pattern.DOTALL);
+  private static final Pattern TAG_BOUNDARY_WHITESPACE = Pattern.compile(">(\\s+)<");
   private final MapperXmlParser parser = new MapperXmlParser();
   private final PlaceholderParser placeholderParser = new PlaceholderParser();
   private final OgnlFormatter ognlFormatter = new OgnlFormatter();
@@ -50,6 +51,7 @@ public final class Validator {
   public ValidationResult validate(SourceFile before, SourceFile after, FormatterConfig config) {
     MapperForgeLoggers.VALIDATOR.debug("Validating formatted mapper XML: {}", before.fileName());
     List<ValidationError> errors = new ArrayList<>();
+    compareWhitespace(before.content(), after.content(), config, errors);
     compareAst(before, after, errors);
     comparePlaceholders(before.content(), after.content(), errors);
     compareSqlStatements(before, after, errors);
@@ -59,6 +61,18 @@ public final class Validator {
           "Mapper XML validation failed: {} errors={}", before.fileName(), result.errors().size());
     }
     return result;
+  }
+
+  private void compareWhitespace(
+      String before, String after, FormatterConfig config, List<ValidationError> errors) {
+    if (!config.preserveWhitespace()) {
+      return;
+    }
+    if (!find(TAG_BOUNDARY_WHITESPACE, before).equals(find(TAG_BOUNDARY_WHITESPACE, after))) {
+      errors.add(
+          new ValidationError(
+              ErrorType.WHITESPACE, "Formatted XML changed whitespace sequence", null));
+    }
   }
 
   private void comparePlaceholders(String before, String after, List<ValidationError> errors) {

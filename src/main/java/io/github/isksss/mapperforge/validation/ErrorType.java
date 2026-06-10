@@ -5,6 +5,7 @@ public enum ErrorType {
   EXPRESSION,
   COMMENT,
   CDATA,
+  WHITESPACE,
   PLACEHOLDER,
   GENERIC_ELEMENT,
   XML
