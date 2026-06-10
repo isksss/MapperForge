@@ -3,6 +3,8 @@ package io.github.isksss.mapperforge.config;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import io.github.isksss.mapperforge.config.ConfigLoader.ConfigException;
+import io.github.isksss.mapperforge.error.ErrorCode;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -55,9 +57,10 @@ final class ConfigLoaderTest {
     Path config = tempDir.resolve("mapperforge.yml");
     Files.writeString(config, "formatterVersion: latest\n", StandardCharsets.UTF_8);
 
-    IllegalArgumentException error =
-        assertThrows(IllegalArgumentException.class, () -> new ConfigLoader().load(config));
+    ConfigException error =
+        assertThrows(ConfigException.class, () -> new ConfigLoader().load(config));
 
+    assertEquals(ErrorCode.CONFIG_ERROR, error.code());
     assertEquals("formatterVersion must be SemVer: latest", error.getMessage());
   }
 
@@ -66,9 +69,10 @@ final class ConfigLoaderTest {
     Path config = tempDir.resolve("mapperforge.yml");
     Files.writeString(config, "indentSize: -1\n", StandardCharsets.UTF_8);
 
-    IllegalArgumentException error =
-        assertThrows(IllegalArgumentException.class, () -> new ConfigLoader().load(config));
+    ConfigException error =
+        assertThrows(ConfigException.class, () -> new ConfigLoader().load(config));
 
+    assertEquals(ErrorCode.CONFIG_ERROR, error.code());
     assertEquals("indentSize must be zero or greater: -1", error.getMessage());
   }
 
@@ -77,9 +81,10 @@ final class ConfigLoaderTest {
     Path config = tempDir.resolve("mapperforge.yml");
     Files.writeString(config, "maxLineLength: 0\n", StandardCharsets.UTF_8);
 
-    IllegalArgumentException error =
-        assertThrows(IllegalArgumentException.class, () -> new ConfigLoader().load(config));
+    ConfigException error =
+        assertThrows(ConfigException.class, () -> new ConfigLoader().load(config));
 
+    assertEquals(ErrorCode.CONFIG_ERROR, error.code());
     assertEquals("maxLineLength must be greater than zero: 0", error.getMessage());
   }
 
@@ -88,9 +93,10 @@ final class ConfigLoaderTest {
     Path config = tempDir.resolve("mapperforge.yml");
     Files.writeString(config, "lineEnding: CR\n", StandardCharsets.UTF_8);
 
-    IllegalArgumentException error =
-        assertThrows(IllegalArgumentException.class, () -> new ConfigLoader().load(config));
+    ConfigException error =
+        assertThrows(ConfigException.class, () -> new ConfigLoader().load(config));
 
+    assertEquals(ErrorCode.CONFIG_ERROR, error.code());
     assertEquals("lineEnding must be LF or CRLF: CR", error.getMessage());
   }
 

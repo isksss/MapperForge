@@ -1,5 +1,6 @@
 package io.github.isksss.mapperforge.config;
 
+import io.github.isksss.mapperforge.error.ErrorCode;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -21,6 +22,8 @@ public final class ConfigLoader {
       return merge(defaults, readYaml(path));
     } catch (IOException e) {
       throw new ConfigException("Failed to read config: " + path, e);
+    } catch (IllegalArgumentException e) {
+      throw new ConfigException(e.getMessage(), e);
     }
   }
 
@@ -129,12 +132,19 @@ public final class ConfigLoader {
   }
 
   public static final class ConfigException extends RuntimeException {
+    private final ErrorCode code;
+
     public ConfigException(String message) {
-      super(message);
+      this(message, null);
     }
 
     public ConfigException(String message, Throwable cause) {
       super(message, cause);
+      this.code = ErrorCode.CONFIG_ERROR;
+    }
+
+    public ErrorCode code() {
+      return code;
     }
   }
 }

@@ -198,7 +198,8 @@ final class MapperForgePluginFunctionalTest {
             .withArguments("mapperForgeFormat")
             .buildAndFail();
 
-    assertTrue(result.getOutput().contains("formatterVersion must be SemVer: latest"));
+    assertTrue(
+        result.getOutput().contains("CONFIG_ERROR: formatterVersion must be SemVer: latest"));
   }
 
   @Test
@@ -223,7 +224,7 @@ final class MapperForgePluginFunctionalTest {
             .withArguments("mapperForgeFormat")
             .buildAndFail();
 
-    assertTrue(result.getOutput().contains("indentSize must be zero or greater: -1"));
+    assertTrue(result.getOutput().contains("CONFIG_ERROR: indentSize must be zero or greater: -1"));
   }
 
   @Test

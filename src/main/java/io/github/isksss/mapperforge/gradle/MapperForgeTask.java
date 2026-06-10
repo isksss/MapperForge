@@ -148,7 +148,14 @@ public abstract class MapperForgeTask extends DefaultTask {
 
   @TaskAction
   public void run() {
-    FormatterConfig config = config();
+    FormatterConfig config;
+    try {
+      config = config();
+    } catch (ConfigLoader.ConfigException e) {
+      throw new GradleException(e.code() + ": " + e.getMessage(), e);
+    } catch (IllegalArgumentException e) {
+      throw new GradleException("CONFIG_ERROR: " + e.getMessage(), e);
+    }
     MapperForgeLoggers.GRADLE.info(
         "Running MapperForge task: {} mode={}", getName(), getMode().get());
     boolean failed = false;
