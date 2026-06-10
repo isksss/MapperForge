@@ -47,6 +47,7 @@ public final class MapperXmlFormatter {
       StringBuilder out = new StringBuilder(source.content().length() + 128);
       extractDoctype(source.content()).ifPresent(out::append);
       ArrayDeque<String> stack = new ArrayDeque<>();
+      StringBuilder textBuffer = new StringBuilder();
       boolean rootSeen = false;
       boolean lastWasStart = false;
 
@@ -54,6 +55,9 @@ public final class MapperXmlFormatter {
         int event = reader.next();
         switch (event) {
           case XMLStreamConstants.START_ELEMENT -> {
+            if (flushText(out, textBuffer, stack.peek(), stack.size(), config)) {
+              lastWasStart = false;
+            }
             if (!rootSeen) {
               if (!out.isEmpty()) {
                 newline(out, stack.size(), config);
@@ -69,17 +73,22 @@ public final class MapperXmlFormatter {
           case XMLStreamConstants.CHARACTERS, XMLStreamConstants.SPACE -> {
             String text = reader.getText();
             if (!text.isBlank()) {
-              appendText(out, text, stack.peek(), stack.size(), config);
-              lastWasStart = false;
+              textBuffer.append(text);
             } else if (config.preserveWhitespace()) {
               out.append(text);
             }
           }
           case XMLStreamConstants.CDATA -> {
+            if (flushText(out, textBuffer, stack.peek(), stack.size(), config)) {
+              lastWasStart = false;
+            }
             appendCdata(out, reader.getText(), stack.size(), config);
             lastWasStart = false;
           }
           case XMLStreamConstants.COMMENT -> {
+            if (flushText(out, textBuffer, stack.peek(), stack.size(), config)) {
+              lastWasStart = false;
+            }
             newline(out, stack.size(), config);
             out.append("<!--").append(reader.getText()).append("-->");
             lastWasStart = false;
@@ -88,6 +97,9 @@ public final class MapperXmlFormatter {
             lastWasStart = false;
           }
           case XMLStreamConstants.END_ELEMENT -> {
+            if (flushText(out, textBuffer, stack.peek(), stack.size(), config)) {
+              lastWasStart = false;
+            }
             String name = stack.pop();
             if (!lastWasStart) {
               newline(out, stack.size(), config);
@@ -102,6 +114,20 @@ public final class MapperXmlFormatter {
     } catch (XMLStreamException e) {
       throw new FormatterException("Failed to parse mapper XML: " + source.fileName(), e);
     }
+  }
+
+  private boolean flushText(
+      StringBuilder out,
+      StringBuilder textBuffer,
+      String parentTag,
+      int depth,
+      FormatterConfig config) {
+    if (textBuffer.isEmpty()) {
+      return false;
+    }
+    appendText(out, textBuffer.toString(), parentTag, depth, config);
+    textBuffer.setLength(0);
+    return true;
   }
 
   private void appendStartElement(

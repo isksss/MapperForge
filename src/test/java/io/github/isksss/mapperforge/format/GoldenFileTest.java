@@ -27,8 +27,7 @@ final class GoldenFileTest {
 
   @TestFactory
   Stream<DynamicTest> defaultGoldenFiles() throws IOException, URISyntaxException {
-    Path goldenRoot = Path.of(getClass().getClassLoader().getResource("golden").toURI());
-    return Files.list(goldenRoot)
+    return goldenDirectories()
         .filter(Files::isDirectory)
         .filter(path -> !CUSTOM_CONFIG_GOLDEN_FILES.contains(path.getFileName().toString()))
         .map(
@@ -56,51 +55,82 @@ final class GoldenFileTest {
 
   @Test
   void appliesConfiguredAttributeOrder() throws IOException {
-    FormatterConfig config =
-        new FormatterConfig(
-            FormatterConfig.defaults().dialect(),
-            FormatterConfig.defaults().formatterVersion(),
-            FormatterConfig.defaults().include(),
-            FormatterConfig.defaults().exclude(),
-            FormatterConfig.defaults().indentSize(),
-            FormatterConfig.defaults().maxLineLength(),
-            FormatterConfig.defaults().lineEnding(),
-            FormatterConfig.defaults().sqlFormatStyle(),
-            FormatterConfig.defaults().sqlPrinter(),
-            FormatterConfig.defaults().tagWrapStyle(),
-            FormatterConfig.defaults().attributeLayout(),
-            FormatterConfig.defaults().preserveWhitespace(),
-            FormatterConfig.defaults().preserveCdata(),
-            FormatterConfig.defaults().formatSqlInsideCdata(),
-            FormatterConfig.defaults().strict(),
-            Map.of("result", List.of("property", "column", "javaType", "jdbcType")));
-
-    assertGolden("attribute-order", config);
+    assertGolden("attribute-order", configFor("attribute-order"));
   }
 
   @Test
   void appliesAstSqlPrinterWhenConfigured() throws IOException {
-    FormatterConfig defaults = FormatterConfig.defaults();
-    FormatterConfig config =
-        new FormatterConfig(
-            defaults.dialect(),
-            defaults.formatterVersion(),
-            defaults.include(),
-            defaults.exclude(),
-            defaults.indentSize(),
-            defaults.maxLineLength(),
-            defaults.lineEnding(),
-            defaults.sqlFormatStyle(),
-            SqlPrinter.AST,
-            defaults.tagWrapStyle(),
-            defaults.attributeLayout(),
-            defaults.preserveWhitespace(),
-            defaults.preserveCdata(),
-            defaults.formatSqlInsideCdata(),
-            defaults.strict(),
-            defaults.attributeOrder());
+    assertGolden("ast-sql-printer", configFor("ast-sql-printer"));
+  }
 
-    assertGolden("ast-sql-printer", config);
+  @TestFactory
+  Stream<DynamicTest> goldenFilesAreIdempotent() throws IOException, URISyntaxException {
+    return goldenDirectories()
+        .filter(Files::isDirectory)
+        .map(
+            path -> {
+              String name = path.getFileName().toString();
+              return DynamicTest.dynamicTest(
+                  name,
+                  () -> {
+                    FormatterConfig config = configFor(name);
+                    String after = resource("golden/" + name + "/after.xml");
+                    assertEquals(
+                        after, mapperForge.format(new SourceFile(name + ".xml", after), config));
+                  });
+            });
+  }
+
+  private FormatterConfig configFor(String goldenName) {
+    if ("attribute-order".equals(goldenName)) {
+      return attributeOrderConfig();
+    }
+    if ("ast-sql-printer".equals(goldenName)) {
+      return astSqlPrinterConfig();
+    }
+    return FormatterConfig.defaults();
+  }
+
+  private FormatterConfig attributeOrderConfig() {
+    FormatterConfig defaults = FormatterConfig.defaults();
+    return new FormatterConfig(
+        defaults.dialect(),
+        defaults.formatterVersion(),
+        defaults.include(),
+        defaults.exclude(),
+        defaults.indentSize(),
+        defaults.maxLineLength(),
+        defaults.lineEnding(),
+        defaults.sqlFormatStyle(),
+        defaults.sqlPrinter(),
+        defaults.tagWrapStyle(),
+        defaults.attributeLayout(),
+        defaults.preserveWhitespace(),
+        defaults.preserveCdata(),
+        defaults.formatSqlInsideCdata(),
+        defaults.strict(),
+        Map.of("result", List.of("property", "column", "javaType", "jdbcType")));
+  }
+
+  private FormatterConfig astSqlPrinterConfig() {
+    FormatterConfig defaults = FormatterConfig.defaults();
+    return new FormatterConfig(
+        defaults.dialect(),
+        defaults.formatterVersion(),
+        defaults.include(),
+        defaults.exclude(),
+        defaults.indentSize(),
+        defaults.maxLineLength(),
+        defaults.lineEnding(),
+        defaults.sqlFormatStyle(),
+        SqlPrinter.AST,
+        defaults.tagWrapStyle(),
+        defaults.attributeLayout(),
+        defaults.preserveWhitespace(),
+        defaults.preserveCdata(),
+        defaults.formatSqlInsideCdata(),
+        defaults.strict(),
+        defaults.attributeOrder());
   }
 
   @Test
@@ -116,6 +146,11 @@ final class GoldenFileTest {
     String after = resource("golden/" + name + "/after.xml");
 
     assertEquals(after, mapperForge.format(new SourceFile(name + ".xml", before), config));
+  }
+
+  private Stream<Path> goldenDirectories() throws IOException, URISyntaxException {
+    Path goldenRoot = Path.of(getClass().getClassLoader().getResource("golden").toURI());
+    return Files.list(goldenRoot);
   }
 
   private String resource(String name) throws IOException {
