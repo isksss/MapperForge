@@ -23,13 +23,39 @@ final class UnifiedDiffTest {
         +TWO
          three
         """,
-        new MapperForge().diff(before, after, FormatterConfig.defaults()));
+        new UnifiedDiff().create(before, after));
   }
 
   @Test
   void returnsEmptyStringWhenContentIsEqual() {
     SourceFile source = new SourceFile("UserMapper.xml", "same\n");
 
-    assertEquals("", new MapperForge().diff(source, source, FormatterConfig.defaults()));
+    assertEquals("", new UnifiedDiff().create(source, source));
+  }
+
+  @Test
+  void mapperForgeDiffPrefixesAstDiffWhenStructureChanges() {
+    SourceFile before =
+        new SourceFile(
+            "UserMapper.xml",
+            "<mapper namespace=\"sample\"><select id=\"find\">select id from users</select></mapper>");
+    SourceFile after =
+        new SourceFile(
+            "UserMapper.xml",
+            "<mapper namespace=\"sample\"><select id=\"find\">select name from users</select></mapper>");
+
+    assertEquals(
+        """
+        # AST Diff
+        - /mapper[0]/select[0] sql: SELECT ID FROM USERS
+        + /mapper[0]/select[0] sql: SELECT NAME FROM USERS
+
+        --- UserMapper.xml
+        +++ UserMapper.xml
+        @@ -1,1 +1,1 @@
+        -<mapper namespace="sample"><select id="find">select id from users</select></mapper>
+        +<mapper namespace="sample"><select id="find">select name from users</select></mapper>
+        """,
+        new MapperForge().diff(before, after, FormatterConfig.defaults()));
   }
 }

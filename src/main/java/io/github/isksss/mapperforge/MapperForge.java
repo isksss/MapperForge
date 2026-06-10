@@ -1,6 +1,7 @@
 package io.github.isksss.mapperforge;
 
 import io.github.isksss.mapperforge.config.FormatterConfig;
+import io.github.isksss.mapperforge.diff.AstDiff;
 import io.github.isksss.mapperforge.diff.UnifiedDiff;
 import io.github.isksss.mapperforge.format.MapperXmlFormatter;
 import io.github.isksss.mapperforge.source.SourceFile;
@@ -10,15 +11,18 @@ import io.github.isksss.mapperforge.validation.Validator;
 public final class MapperForge {
   private final MapperXmlFormatter formatter;
   private final Validator validator;
+  private final AstDiff astDiff;
   private final UnifiedDiff diff;
 
   public MapperForge() {
-    this(new MapperXmlFormatter(), new Validator(), new UnifiedDiff());
+    this(new MapperXmlFormatter(), new Validator(), new AstDiff(), new UnifiedDiff());
   }
 
-  MapperForge(MapperXmlFormatter formatter, Validator validator, UnifiedDiff diff) {
+  MapperForge(
+      MapperXmlFormatter formatter, Validator validator, AstDiff astDiff, UnifiedDiff diff) {
     this.formatter = formatter;
     this.validator = validator;
+    this.astDiff = astDiff;
     this.diff = diff;
   }
 
@@ -35,6 +39,14 @@ public final class MapperForge {
   }
 
   public String diff(SourceFile before, SourceFile after, FormatterConfig config) {
-    return diff.create(before, after);
+    String ast = astDiff.create(before, after);
+    String unified = diff.create(before, after);
+    if (ast.isEmpty()) {
+      return unified;
+    }
+    if (unified.isEmpty()) {
+      return ast;
+    }
+    return ast + "\n" + unified;
   }
 }
