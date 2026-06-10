@@ -4,6 +4,7 @@ import com.ctc.wstx.stax.WstxInputFactory;
 import io.github.isksss.mapperforge.config.AttributeLayout;
 import io.github.isksss.mapperforge.config.FormatterConfig;
 import io.github.isksss.mapperforge.config.TagWrapStyle;
+import io.github.isksss.mapperforge.error.ErrorCode;
 import io.github.isksss.mapperforge.logging.MapperForgeLoggers;
 import io.github.isksss.mapperforge.source.SourceFile;
 import java.io.StringReader;
@@ -276,8 +277,15 @@ public final class MapperXmlFormatter {
   private record XmlAttribute(String name, String value) {}
 
   public static final class FormatterException extends RuntimeException {
+    private final ErrorCode code;
+
     public FormatterException(String message, Throwable cause) {
       super(message, cause);
+      this.code = ErrorCode.FORMAT_ERROR;
+    }
+
+    public ErrorCode code() {
+      return code;
     }
   }
 }

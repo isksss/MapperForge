@@ -100,6 +100,7 @@ This document maps the main `PLAN.local.md` requirements to implementation and v
 | Requirement | Evidence |
 | --- | --- |
 | AST comparison | `Validator`, `ValidatorTest` |
+| Error code classification | `ErrorCode`, `ValidationError`, `ConfigLoader.ConfigException`, `ParserException`, `FormatterException` |
 | SQL semantic validation | `Validator`, `ValidatorTest` |
 | OGNL semantic validation | `Validator`, `ValidatorTest` |
 | Placeholder validation | `PlaceholderParser`, `ValidatorTest` |

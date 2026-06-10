@@ -34,6 +34,7 @@ import io.github.isksss.mapperforge.ast.mapper.TrimElementNode;
 import io.github.isksss.mapperforge.ast.mapper.UpdateElementNode;
 import io.github.isksss.mapperforge.ast.mapper.WhenElementNode;
 import io.github.isksss.mapperforge.ast.mapper.WhereElementNode;
+import io.github.isksss.mapperforge.error.ErrorCode;
 import io.github.isksss.mapperforge.logging.MapperForgeLoggers;
 import io.github.isksss.mapperforge.parse.sql.SqlStatementParser;
 import io.github.isksss.mapperforge.parse.sql.SqlTokenizer;
@@ -229,12 +230,19 @@ public final class MapperXmlParser {
   }
 
   public static final class ParserException extends RuntimeException {
+    private final ErrorCode code;
+
     public ParserException(String message) {
-      super(message);
+      this(message, null);
     }
 
     public ParserException(String message, Throwable cause) {
       super(message, cause);
+      this.code = ErrorCode.PARSER_ERROR;
+    }
+
+    public ErrorCode code() {
+      return code;
     }
   }
 }

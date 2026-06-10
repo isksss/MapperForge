@@ -2,6 +2,7 @@ package io.github.isksss.mapperforge.parse;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.isksss.mapperforge.ast.mapper.CDataNode;
@@ -14,6 +15,7 @@ import io.github.isksss.mapperforge.ast.mapper.SelectElementNode;
 import io.github.isksss.mapperforge.ast.mapper.TextNode;
 import io.github.isksss.mapperforge.ast.mapper.TextType;
 import io.github.isksss.mapperforge.ast.sql.UnknownStatement;
+import io.github.isksss.mapperforge.error.ErrorCode;
 import io.github.isksss.mapperforge.source.SourceFile;
 import org.junit.jupiter.api.Test;
 
@@ -63,6 +65,16 @@ final class MapperXmlParserTest {
   @Test
   void returnsEmptyWhenRootIsNotMapper() {
     assertTrue(parser.parseMapper(new SourceFile("not-mapper.xml", "<root></root>")).isEmpty());
+  }
+
+  @Test
+  void parserExceptionCarriesParserErrorCode() {
+    MapperXmlParser.ParserException error =
+        assertThrows(
+            MapperXmlParser.ParserException.class,
+            () -> parser.parse(new SourceFile("broken.xml", "<mapper>")));
+
+    assertEquals(ErrorCode.PARSER_ERROR, error.code());
   }
 
   @Test

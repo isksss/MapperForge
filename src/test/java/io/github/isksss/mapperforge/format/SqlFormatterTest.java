@@ -1,11 +1,13 @@
 package io.github.isksss.mapperforge.format;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import io.github.isksss.mapperforge.MapperForge;
 import io.github.isksss.mapperforge.config.FormatterConfig;
 import io.github.isksss.mapperforge.config.SqlFormatStyle;
 import io.github.isksss.mapperforge.config.SqlPrinter;
+import io.github.isksss.mapperforge.error.ErrorCode;
 import io.github.isksss.mapperforge.source.SourceFile;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -79,6 +81,18 @@ final class SqlFormatterTest {
         """,
         new MapperForge()
             .format(new SourceFile("UserMapper.xml", before), cdataNotPreservedConfig()));
+  }
+
+  @Test
+  void formatterExceptionCarriesFormatErrorCode() {
+    MapperXmlFormatter.FormatterException error =
+        assertThrows(
+            MapperXmlFormatter.FormatterException.class,
+            () ->
+                new MapperForge()
+                    .format(new SourceFile("broken.xml", "<mapper>"), FormatterConfig.defaults()));
+
+    assertEquals(ErrorCode.FORMAT_ERROR, error.code());
   }
 
   private static FormatterConfig config(SqlFormatStyle style, SqlPrinter printer) {
