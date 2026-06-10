@@ -99,6 +99,20 @@ final class ValidatorTest {
   }
 
   @Test
+  void acceptsCdataWrapperRemovalWhenCdataIsNotPreserved() {
+    SourceFile before =
+        new SourceFile(
+            "before.xml",
+            "<mapper namespace=\"sample\"><select><![CDATA[select id from users where age < #{age}]]></select></mapper>");
+    SourceFile after =
+        new SourceFile(
+            "after.xml",
+            "<mapper namespace=\"sample\"><select>select id from users where age &lt; #{age}</select></mapper>");
+
+    assertTrue(validator.validate(before, after, cdataNotPreservedConfig()).success());
+  }
+
+  @Test
   void rejectsPlaceholderOptionChanges() {
     SourceFile before =
         new SourceFile(
@@ -211,6 +225,27 @@ final class ValidatorTest {
         defaults.attributeLayout(),
         true,
         defaults.preserveCdata(),
+        defaults.formatSqlInsideCdata(),
+        defaults.strict(),
+        defaults.attributeOrder());
+  }
+
+  private static FormatterConfig cdataNotPreservedConfig() {
+    FormatterConfig defaults = FormatterConfig.defaults();
+    return new FormatterConfig(
+        defaults.dialect(),
+        defaults.formatterVersion(),
+        defaults.include(),
+        defaults.exclude(),
+        defaults.indentSize(),
+        defaults.maxLineLength(),
+        defaults.lineEnding(),
+        defaults.sqlFormatStyle(),
+        defaults.sqlPrinter(),
+        defaults.tagWrapStyle(),
+        defaults.attributeLayout(),
+        defaults.preserveWhitespace(),
+        false,
         defaults.formatSqlInsideCdata(),
         defaults.strict(),
         defaults.attributeOrder());

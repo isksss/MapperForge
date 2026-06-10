@@ -52,7 +52,7 @@ public final class Validator {
     MapperForgeLoggers.VALIDATOR.debug("Validating formatted mapper XML: {}", before.fileName());
     List<ValidationError> errors = new ArrayList<>();
     compareWhitespace(before.content(), after.content(), config, errors);
-    compareAst(before, after, errors);
+    compareAst(before, after, config, errors);
     comparePlaceholders(before.content(), after.content(), errors);
     compareSqlStatements(before, after, errors);
     ValidationResult result = new ValidationResult(errors.isEmpty(), List.copyOf(errors));
@@ -87,13 +87,14 @@ public final class Validator {
     }
   }
 
-  private void compareAst(SourceFile before, SourceFile after, List<ValidationError> errors) {
-    var beforeAst = comparable(parser.parse(before));
-    var afterAst = comparable(parser.parse(after));
+  private void compareAst(
+      SourceFile before, SourceFile after, FormatterConfig config, List<ValidationError> errors) {
+    var beforeAst = comparable(parser.parse(before), config);
+    var afterAst = comparable(parser.parse(after), config);
     if (!beforeAst.equals(afterAst)) {
       errors.add(
           new ValidationError(
-              classifyAstChange(before.content(), after.content()),
+              classifyAstChange(before.content(), after.content(), config),
               "Formatted XML changed AST",
               null));
     }
@@ -110,11 +111,11 @@ public final class Validator {
     }
   }
 
-  private ErrorType classifyAstChange(String before, String after) {
+  private ErrorType classifyAstChange(String before, String after, FormatterConfig config) {
     if (!find(COMMENT, before).equals(find(COMMENT, after))) {
       return ErrorType.COMMENT;
     }
-    if (!find(CDATA, before).equals(find(CDATA, after))) {
+    if (config.preserveCdata() && !find(CDATA, before).equals(find(CDATA, after))) {
       return ErrorType.CDATA;
     }
     if (!ognlExpressionSignatures(parser.parse(new SourceFile("before.xml", before)))
@@ -124,16 +125,17 @@ public final class Validator {
     return ErrorType.GENERIC_ELEMENT;
   }
 
-  private MapperNode comparable(MapperNode node) {
+  private MapperNode comparable(MapperNode node, FormatterConfig config) {
     return switch (node) {
       case TextNode ignored -> new TextNode(TextType.PLAIN_TEXT, "");
       case CommentNode comment -> comment;
-      case CDataNode cdata -> cdata;
+      case CDataNode cdata ->
+          config.preserveCdata() ? cdata : new TextNode(TextType.PLAIN_TEXT, "");
       case ElementNode element ->
           new GenericElementNode(
               element.tagName(),
               comparableAttributes(element),
-              element.children().stream().map(this::comparable).toList());
+              element.children().stream().map(child -> comparable(child, config)).toList());
     };
   }
 

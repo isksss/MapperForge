@@ -2,9 +2,11 @@ package io.github.isksss.mapperforge.format;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import io.github.isksss.mapperforge.MapperForge;
 import io.github.isksss.mapperforge.config.FormatterConfig;
 import io.github.isksss.mapperforge.config.SqlFormatStyle;
 import io.github.isksss.mapperforge.config.SqlPrinter;
+import io.github.isksss.mapperforge.source.SourceFile;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
@@ -40,6 +42,26 @@ final class SqlFormatterTest {
             config(SqlFormatStyle.SINGLE_LINE, SqlPrinter.AST)));
   }
 
+  @Test
+  void convertsCdataToEscapedTextWhenCdataIsNotPreserved() {
+    String before =
+        "<mapper namespace=\"sample\"><select id=\"find\"><![CDATA[select id from users where age < #{age} and flags & #{mask}]]></select></mapper>";
+
+    assertEquals(
+        """
+        <mapper namespace="sample">
+            <select id="find">
+                SELECT
+                    id
+                FROM users
+                WHERE age &lt; #{age} AND flags &amp; #{mask}
+            </select>
+        </mapper>
+        """,
+        new MapperForge()
+            .format(new SourceFile("UserMapper.xml", before), cdataNotPreservedConfig()));
+  }
+
   private static FormatterConfig config(SqlFormatStyle style, SqlPrinter printer) {
     FormatterConfig defaults = FormatterConfig.defaults();
     return new FormatterConfig(
@@ -59,5 +81,26 @@ final class SqlFormatterTest {
         defaults.formatSqlInsideCdata(),
         defaults.strict(),
         Map.of());
+  }
+
+  private static FormatterConfig cdataNotPreservedConfig() {
+    FormatterConfig defaults = FormatterConfig.defaults();
+    return new FormatterConfig(
+        defaults.dialect(),
+        defaults.formatterVersion(),
+        defaults.include(),
+        defaults.exclude(),
+        defaults.indentSize(),
+        defaults.maxLineLength(),
+        defaults.lineEnding(),
+        defaults.sqlFormatStyle(),
+        defaults.sqlPrinter(),
+        defaults.tagWrapStyle(),
+        defaults.attributeLayout(),
+        defaults.preserveWhitespace(),
+        false,
+        defaults.formatSqlInsideCdata(),
+        defaults.strict(),
+        defaults.attributeOrder());
   }
 }

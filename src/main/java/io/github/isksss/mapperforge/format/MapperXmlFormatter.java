@@ -82,7 +82,7 @@ public final class MapperXmlFormatter {
             if (flushText(out, textBuffer, stack.peek(), stack.size(), config)) {
               lastWasStart = false;
             }
-            appendCdata(out, reader.getText(), stack.size(), config);
+            appendCdata(out, reader.getText(), stack.peek(), stack.size(), config);
             lastWasStart = false;
           }
           case XMLStreamConstants.COMMENT -> {
@@ -201,10 +201,36 @@ public final class MapperXmlFormatter {
     }
   }
 
-  private void appendCdata(StringBuilder out, String raw, int depth, FormatterConfig config) {
+  private void appendCdata(
+      StringBuilder out, String raw, String parentTag, int depth, FormatterConfig config) {
+    String text =
+        config.formatSqlInsideCdata() || !config.preserveCdata()
+            ? formattedText(raw, parentTag, config)
+            : raw.strip();
+    if (!config.preserveCdata()) {
+      appendEscapedText(out, text, depth, config);
+      return;
+    }
     newline(out, depth, config);
-    String text = config.formatSqlInsideCdata() ? sqlFormatter.format(raw, config) : raw.strip();
     out.append("<![CDATA[").append(text).append("]]>");
+  }
+
+  private void appendEscapedText(
+      StringBuilder out, String text, int depth, FormatterConfig config) {
+    if (text.isBlank()) {
+      return;
+    }
+    for (String line : text.split("\\R")) {
+      if (line.isBlank()) {
+        continue;
+      }
+      newline(out, depth, config);
+      out.append(escapeText(line.stripTrailing()));
+    }
+  }
+
+  private String formattedText(String text, String parentTag, FormatterConfig config) {
+    return SQL_TEXT_TAGS.contains(parentTag) ? sqlFormatter.format(text, config) : text.strip();
   }
 
   private java.util.Optional<String> extractDoctype(String content) {
@@ -228,6 +254,10 @@ public final class MapperXmlFormatter {
 
   private String escapeAttribute(String value) {
     return value.replace("&", "&amp;").replace("\"", "&quot;").replace("<", "&lt;");
+  }
+
+  private String escapeText(String value) {
+    return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
   }
 
   private record XmlAttribute(String name, String value) {}
