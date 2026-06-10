@@ -165,16 +165,28 @@ final class ValidatorTest {
   void rejectsCdataChangesWhenPreserved() {
     SourceFile before =
         new SourceFile(
-            "before.xml", "<mapper namespace=\"sample\"><select><![CDATA[a]]></select></mapper>");
+            "before.xml",
+            """
+            <mapper namespace="sample">
+                <select><![CDATA[a]]></select>
+            </mapper>
+            """);
     SourceFile after =
         new SourceFile(
-            "after.xml", "<mapper namespace=\"sample\"><select><![CDATA[b]]></select></mapper>");
+            "after.xml",
+            """
+            <mapper namespace="sample">
+                <select><![CDATA[b]]></select>
+            </mapper>
+            """);
 
     ValidationResult result = validator.validate(before, after, FormatterConfig.defaults());
 
     assertFalse(result.success());
     assertEquals(ErrorType.CDATA, result.errors().getFirst().type());
     assertEquals(ErrorCode.VALIDATION_ERROR, result.errors().getFirst().code());
+    assertEquals(2, result.errors().getFirst().location().start().line());
+    assertEquals(13, result.errors().getFirst().location().start().column());
   }
 
   @Test

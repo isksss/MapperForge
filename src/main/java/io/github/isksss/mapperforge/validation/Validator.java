@@ -127,6 +127,9 @@ public final class Validator {
     if (type == ErrorType.COMMENT) {
       return firstDifferingCommentRange(before, after);
     }
+    if (type == ErrorType.CDATA) {
+      return firstDifferingCdataRange(before, after);
+    }
     if (type == ErrorType.EXPRESSION) {
       return firstDifferingOgnlAttributeRange(before, after);
     }
@@ -439,6 +442,18 @@ public final class Validator {
         (left, right) ->
             Integer.compare(left.range().start().offset(), right.range().start().offset()));
     return matches;
+  }
+
+  private Range firstDifferingCdataRange(String before, String after) {
+    List<TextMatch> beforeMatches = findMatches(CDATA, before);
+    List<TextMatch> afterMatches = findMatches(CDATA, after);
+    int differingIndex =
+        firstDifferingIndex(
+            beforeMatches.stream().map(TextMatch::value).toList(),
+            afterMatches.stream().map(TextMatch::value).toList());
+    return differingIndex >= 0 && differingIndex < beforeMatches.size()
+        ? beforeMatches.get(differingIndex).range()
+        : null;
   }
 
   private Range firstDifferingOgnlAttributeRange(String before, String after) {
