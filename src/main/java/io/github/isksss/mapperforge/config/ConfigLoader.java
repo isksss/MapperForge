@@ -13,7 +13,22 @@ import java.util.Map;
 import org.snakeyaml.engine.v2.api.Load;
 import org.snakeyaml.engine.v2.api.LoadSettings;
 
+/**
+ * `mapperforge.yml` を読み込み、formatter 設定へ変換します。
+ *
+ * <p>設定ファイルが存在しない場合は {@link FormatterConfig#defaults()} を返します。YAML の値は default 設定へ上書き merge されます。
+ */
 public final class ConfigLoader {
+  /** ConfigLoader を作成します。 */
+  public ConfigLoader() {}
+
+  /**
+   * 指定 path の `mapperforge.yml` を読み込みます。
+   *
+   * @param path 設定ファイル path
+   * @return 読み込んだ formatter 設定。ファイルが存在しない場合は default 設定
+   * @throws ConfigException YAML 読み込みまたは値検証に失敗した場合
+   */
   public FormatterConfig load(Path path) {
     FormatterConfig defaults = FormatterConfig.defaults();
     if (!Files.isRegularFile(path)) {
@@ -150,18 +165,35 @@ public final class ConfigLoader {
     return Arrays.stream(type.getEnumConstants()).map(Enum::name).toList();
   }
 
+  /** MapperForge 設定読み込み時の例外です。 */
   public static final class ConfigException extends RuntimeException {
     private final ErrorCode code;
 
+    /**
+     * 設定例外を作成します。
+     *
+     * @param message error message
+     */
     public ConfigException(String message) {
       this(message, null);
     }
 
+    /**
+     * 原因付きの設定例外を作成します。
+     *
+     * @param message error message
+     * @param cause 原因
+     */
     public ConfigException(String message, Throwable cause) {
       super(message, cause);
       this.code = ErrorCode.CONFIG_ERROR;
     }
 
+    /**
+     * 設定 error code を返します。
+     *
+     * @return {@link ErrorCode#CONFIG_ERROR}
+     */
     public ErrorCode code() {
       return code;
     }

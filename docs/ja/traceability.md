@@ -27,7 +27,7 @@
 | Requirement | Evidence |
 | --- | --- |
 | Gradle extension | `MapperForgeExtension`, `MapperForgeTask.configureFrom`, `MapperForgeExtensionTest`, `MapperForgePluginFunctionalTest` |
-| `mapperforge.yml` | `ConfigLoader`, `ConfigLoaderTest` |
+| `mapperforge.yml` | `ConfigLoader`, `ConfigLoaderTest`, `docs/ja/adr/0092-config-loader-public-contract.md` |
 | Gradle > YAML > defaults precedence | `MapperForgeTask.configureFrom`, `MapperForgePluginFunctionalTest` |
 | SemVer formatter version | `FormatterConfig`, `ConfigLoaderTest`, `MapperForgePluginFunctionalTest` |
 | Formatter defaults | `FormatterConfig.defaults`, `FormatterConfigTest`, `ConfigLoaderTest` |

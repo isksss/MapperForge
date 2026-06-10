@@ -53,6 +53,18 @@ final class ConfigLoaderTest {
   }
 
   @Test
+  void rejectsYamlRootThatIsNotMapping() throws IOException {
+    Path config = tempDir.resolve("mapperforge.yml");
+    Files.writeString(config, "- dialect\n- MYSQL\n", StandardCharsets.UTF_8);
+
+    ConfigException error =
+        assertThrows(ConfigException.class, () -> new ConfigLoader().load(config));
+
+    assertEquals(ErrorCode.CONFIG_ERROR, error.code());
+    assertEquals("mapperforge.yml must contain a mapping", error.getMessage());
+  }
+
+  @Test
   void rejectsInvalidFormatterVersion() throws IOException {
     Path config = tempDir.resolve("mapperforge.yml");
     Files.writeString(config, "formatterVersion: latest\n", StandardCharsets.UTF_8);
