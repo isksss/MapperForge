@@ -1,0 +1,14 @@
+<mapper namespace="sample.UserMapper">
+    <select id="find" resultType="User">
+        SELECT
+            id
+        FROM users
+        WHERE age
+        <![CDATA[<]]>
+        #{age} AND score
+        <![CDATA[>=]]>
+        #{score} AND flags
+        <![CDATA[&]]>
+        #{mask}
+    </select>
+</mapper>

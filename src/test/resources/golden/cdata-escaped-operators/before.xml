@@ -1,0 +1,1 @@
+<mapper namespace="sample.UserMapper"><select id="find" resultType="User">select id from users where age <![CDATA[<]]> #{age} and score <![CDATA[>=]]> #{score} and flags <![CDATA[&]]> #{mask}</select></mapper>

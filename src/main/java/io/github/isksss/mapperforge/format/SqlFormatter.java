@@ -9,8 +9,16 @@ import java.util.regex.Pattern;
 public final class SqlFormatter {
   private static final List<String> CLAUSE_KEYWORDS =
       List.of(
+          "WITH",
           "SELECT",
+          "INSERT INTO",
+          "UPDATE",
+          "DELETE FROM",
           "FROM",
+          "LEFT JOIN",
+          "RIGHT JOIN",
+          "INNER JOIN",
+          "ON",
           "WHERE",
           "GROUP BY",
           "ORDER BY",
@@ -37,7 +45,7 @@ public final class SqlFormatter {
     }
     String formatted = upper;
     for (String keyword : CLAUSE_KEYWORDS) {
-      formatted = formatted.replaceAll("(?i)\\s+" + Pattern.quote(keyword) + "\\b", "\n" + keyword);
+      formatted = formatted.replaceAll(clausePattern(keyword), "\n" + keyword);
     }
     formatted = formatted.replaceAll("(?i)^" + Pattern.quote("SELECT") + "\\s+", "SELECT\n    ");
     formatted = formatted.replaceAll(",\\s*", ",\n    ");
@@ -59,5 +67,12 @@ public final class SqlFormatter {
       result = result.replaceAll("(?i)\\b" + keyword + "\\b", keyword);
     }
     return result;
+  }
+
+  private String clausePattern(String keyword) {
+    return switch (keyword) {
+      case "FROM" -> "(?i)(?<!DELETE)\\s+" + Pattern.quote(keyword) + "\\b";
+      default -> "(?i)\\s+" + Pattern.quote(keyword) + "\\b";
+    };
   }
 }

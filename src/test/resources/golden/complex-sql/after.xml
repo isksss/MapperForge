@@ -1,0 +1,36 @@
+<mapper namespace="sample.UserMapper">
+    <select id="complexSearch" resultMap="userResultMap">
+        <!-- keep sql comment -->
+        <![CDATA[select /* raw */ now()]]>
+        WITH active_users as (SELECT u.id,
+            u.name,
+            row_number() over (partition by u.org_id
+        ORDER BY u.created_at desc) rn
+        FROM users u
+        WHERE u.deleted = false)
+        SELECT au.id,
+            au.name,
+            coalesce(p.display_name,
+            au.name) display_name,
+            case when exists (SELECT 1
+        FROM orders o
+        WHERE o.user_id = au.id) then 'ACTIVE' else 'NEW' end status
+        FROM active_users au
+        LEFT JOIN profiles p
+        ON p.user_id = au.id
+        WHERE au.rn = 1
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+        <if test="tags != null &amp;&amp; tags.size() > 0">
+            AND au.id IN (SELECT ut.user_id
+            FROM user_tags ut
+            WHERE ut.tag IN
+            <foreach collection="tags" item="tag" open="(" separator="," close=")">
+                #{tag}
+            </foreach>
+            )
+        </if>
+        ORDER BY au.name asc
+    </select>
+</mapper>

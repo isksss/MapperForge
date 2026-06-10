@@ -1,0 +1,1 @@
+<mapper namespace="sample.UserMapper"><insert id="insert">insert into users (id, name, email) values (#{id}, #{name}, #{email})</insert><update id="update">update users set name = #{name}, email = #{email} where id = #{id}</update><delete id="delete">delete from users where id = #{id}</delete></mapper>

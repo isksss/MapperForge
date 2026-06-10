@@ -1,0 +1,1 @@
+<mapper namespace="sample.UserMapper"><select id="search" resultType="User">select id, name from users<where><if test="ids!=null&amp;&amp;ids.size()>0">id in<foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach></if><choose><when test="name!=null">and name = #{name}</when><otherwise>and deleted = false</otherwise></choose></where></select></mapper>

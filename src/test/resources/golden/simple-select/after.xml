@@ -1,0 +1,10 @@
+<mapper namespace="sample.UserMapper">
+    <select id="findById" parameterType="long" resultType="User">
+        SELECT
+            id,
+            name,
+            email
+        FROM users
+        WHERE id = #{id}
+    </select>
+</mapper>

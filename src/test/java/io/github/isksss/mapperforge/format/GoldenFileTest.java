@@ -21,6 +21,31 @@ final class GoldenFileTest {
   }
 
   @Test
+  void formatsSimpleSelect() throws IOException {
+    assertGolden("simple-select", FormatterConfig.defaults());
+  }
+
+  @Test
+  void formatsInsertUpdateDelete() throws IOException {
+    assertGolden("insert-update-delete", FormatterConfig.defaults());
+  }
+
+  @Test
+  void formatsForeachAndChoose() throws IOException {
+    assertGolden("foreach-choose", FormatterConfig.defaults());
+  }
+
+  @Test
+  void formatsComplexSql() throws IOException {
+    assertGolden("complex-sql", FormatterConfig.defaults());
+  }
+
+  @Test
+  void preservesCdataEscapedOperators() throws IOException {
+    assertGolden("cdata-escaped-operators", FormatterConfig.defaults());
+  }
+
+  @Test
   void preservesLosslessNodes() throws IOException {
     FormatterConfig config = FormatterConfig.defaults();
     String before = resource("golden/lossless/before.xml");

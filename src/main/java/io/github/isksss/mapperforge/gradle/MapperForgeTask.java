@@ -7,6 +7,7 @@ import io.github.isksss.mapperforge.config.Dialect;
 import io.github.isksss.mapperforge.config.FormatterConfig;
 import io.github.isksss.mapperforge.config.SqlFormatStyle;
 import io.github.isksss.mapperforge.config.TagWrapStyle;
+import io.github.isksss.mapperforge.parse.MapperXmlParser;
 import io.github.isksss.mapperforge.source.SourceFile;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -40,6 +41,7 @@ public abstract class MapperForgeTask extends DefaultTask {
   }
 
   private final ConfigurableFileCollection sourceFiles = getProject().files();
+  private final MapperXmlParser parser = new MapperXmlParser();
 
   @Input
   public abstract Property<Mode> getMode();
@@ -197,8 +199,10 @@ public abstract class MapperForgeTask extends DefaultTask {
 
   private boolean isMapperXml(java.nio.file.Path path) {
     try {
-      String prefix = Files.readString(path, StandardCharsets.UTF_8);
-      return prefix.contains("<mapper ");
+      String content = Files.readString(path, StandardCharsets.UTF_8);
+      return parser.parseMapper(new SourceFile(path.getFileName().toString(), content)).isPresent();
+    } catch (MapperXmlParser.ParserException e) {
+      return false;
     } catch (IOException e) {
       throw new GradleException("Failed to read " + path, e);
     }

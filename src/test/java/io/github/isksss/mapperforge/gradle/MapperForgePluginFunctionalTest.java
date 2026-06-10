@@ -81,6 +81,27 @@ final class MapperForgePluginFunctionalTest {
   }
 
   @Test
+  void ignoresXmlWhenMapperAppearsOnlyInComment() throws IOException {
+    writeProject();
+    Path xml = projectDir.resolve("src/main/resources/sample/NotMapper.xml");
+    Files.createDirectories(xml.getParent());
+    Files.writeString(
+        xml,
+        "<!-- <mapper namespace=\"sample.UserMapper\"> --><root><select>select id from users</select></root>",
+        StandardCharsets.UTF_8);
+
+    GradleRunner.create()
+        .withProjectDir(projectDir.toFile())
+        .withPluginClasspath()
+        .withArguments("mapperForgeFormat")
+        .build();
+
+    assertEquals(
+        "<!-- <mapper namespace=\"sample.UserMapper\"> --><root><select>select id from users</select></root>",
+        Files.readString(xml, StandardCharsets.UTF_8));
+  }
+
+  @Test
   void yamlConfigProvidesDefaultsAndGradleDslOverridesIt() throws IOException {
     Files.writeString(
         projectDir.resolve("mapperforge.yml"),
