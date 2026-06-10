@@ -58,7 +58,7 @@
 | Dedicated MyBatis nodes | `ast/mapper/*ElementNode.java`, `MapperXmlParserTest` |
 | `GenericElement` fallback | `GenericElementNode`, `MapperXmlParserTest`, `ValidatorTest` |
 | `TextNode`, `CommentNode`, `CDataNode` | `ast/mapper`, golden files, `ValidatorTest` |
-| Placeholder parser | `PlaceholderParser`, `PlaceholderParserTest` |
+| Placeholder parser | `PlaceholderParser`, `PlaceholderExpression`, `PlaceholderParserTest` |
 | Source position records | `SourceFile`, `Position`, `Range`, `Token`, `SourceModelTest` |
 
 ## SQL

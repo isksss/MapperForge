@@ -6,7 +6,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/** MyBatis placeholder 文字列を PlaceholderExpression へ変換します。 */
 public final class PlaceholderParser {
+  /** parser instance を作成します。 */
+  public PlaceholderParser() {}
+
+  /**
+   * placeholder 文字列を parse します。
+   *
+   * @param raw {@code #{...}} または {@code ${...}} 形式の placeholder
+   * @return parse 済み placeholder expression
+   */
   public PlaceholderExpression parse(String raw) {
     PlaceholderType type = raw.startsWith("#{") ? PlaceholderType.HASH : PlaceholderType.DOLLAR;
     String body = raw.substring(2, raw.length() - 1).strip();

@@ -1,8 +1,12 @@
 package io.github.isksss.mapperforge.parse.sql;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import io.github.isksss.mapperforge.ast.sql.PlaceholderExpression;
 import io.github.isksss.mapperforge.ast.sql.PlaceholderType;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 final class PlaceholderParserTest {
@@ -34,5 +38,20 @@ final class PlaceholderParserTest {
     var placeholder = parser.parse("#{name, defaultValue='A,B'}");
 
     assertEquals("A,B", placeholder.options().get("defaultValue"));
+  }
+
+  @Test
+  void placeholderExpressionDefensivelyCopiesOptions() {
+    Map<String, String> options = new LinkedHashMap<>();
+    options.put("jdbcType", "BIGINT");
+
+    PlaceholderExpression placeholder =
+        new PlaceholderExpression(PlaceholderType.HASH, "id", options);
+    options.put("javaType", "long");
+
+    assertEquals(Map.of("jdbcType", "BIGINT"), placeholder.options());
+    assertThrows(
+        UnsupportedOperationException.class,
+        () -> placeholder.options().put("typeHandler", "UserIdHandler"));
   }
 }
