@@ -71,15 +71,29 @@ final class ValidatorTest {
   @Test
   void rejectsCommentChanges() {
     SourceFile before =
-        new SourceFile("before.xml", "<mapper namespace=\"sample\"><!-- a --></mapper>");
+        new SourceFile(
+            "before.xml",
+            """
+            <mapper namespace="sample">
+                <!-- a -->
+            </mapper>
+            """);
     SourceFile after =
-        new SourceFile("after.xml", "<mapper namespace=\"sample\"><!-- b --></mapper>");
+        new SourceFile(
+            "after.xml",
+            """
+            <mapper namespace="sample">
+                <!-- b -->
+            </mapper>
+            """);
 
     ValidationResult result = validator.validate(before, after, FormatterConfig.defaults());
 
     assertFalse(result.success());
     assertEquals(ErrorType.COMMENT, result.errors().getFirst().type());
     assertEquals(ErrorCode.VALIDATION_ERROR, result.errors().getFirst().code());
+    assertEquals(2, result.errors().getFirst().location().start().line());
+    assertEquals(5, result.errors().getFirst().location().start().column());
   }
 
   @Test
@@ -113,6 +127,8 @@ final class ValidatorTest {
 
     assertFalse(result.success());
     assertEquals(ErrorType.COMMENT, result.errors().getFirst().type());
+    assertEquals(3, result.errors().getFirst().location().start().line());
+    assertEquals(19, result.errors().getFirst().location().start().column());
   }
 
   @Test

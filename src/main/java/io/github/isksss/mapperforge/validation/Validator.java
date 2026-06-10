@@ -45,6 +45,9 @@ import java.util.regex.Pattern;
 public final class Validator {
   private static final Pattern PLACEHOLDER = Pattern.compile("[$#]\\{[^}]+}");
   private static final Pattern CDATA = Pattern.compile("<!\\[CDATA\\[.*?]]>", Pattern.DOTALL);
+  private static final Pattern XML_COMMENT = Pattern.compile("<!--.*?-->", Pattern.DOTALL);
+  private static final Pattern SQL_COMMENT =
+      Pattern.compile("--[^\\r\\n]*|/\\*.*?\\*/", Pattern.DOTALL);
   private static final Pattern XML_ENTITY =
       Pattern.compile("&(?:amp|lt|gt|quot|apos);", Pattern.CASE_INSENSITIVE);
   private static final Pattern OGNL_ATTRIBUTE =
@@ -121,6 +124,9 @@ public final class Validator {
   }
 
   private Range astChangeLocation(ErrorType type, String before, String after) {
+    if (type == ErrorType.COMMENT) {
+      return firstDifferingCommentRange(before, after);
+    }
     if (type == ErrorType.EXPRESSION) {
       return firstDifferingOgnlAttributeRange(before, after);
     }
@@ -410,6 +416,28 @@ public final class Validator {
       matches.add(
           new TextMatch(matcher.group(), sourceRange(value, matcher.start(), matcher.end())));
     }
+    return matches;
+  }
+
+  private Range firstDifferingCommentRange(String before, String after) {
+    List<TextMatch> beforeComments = commentMatches(before);
+    List<TextMatch> afterComments = commentMatches(after);
+    int differingIndex =
+        firstDifferingIndex(
+            beforeComments.stream().map(TextMatch::value).toList(),
+            afterComments.stream().map(TextMatch::value).toList());
+    return differingIndex >= 0 && differingIndex < beforeComments.size()
+        ? beforeComments.get(differingIndex).range()
+        : null;
+  }
+
+  private List<TextMatch> commentMatches(String source) {
+    List<TextMatch> matches = new ArrayList<>();
+    matches.addAll(findMatches(XML_COMMENT, source));
+    matches.addAll(findMatches(SQL_COMMENT, source));
+    matches.sort(
+        (left, right) ->
+            Integer.compare(left.range().start().offset(), right.range().start().offset()));
     return matches;
   }
 
