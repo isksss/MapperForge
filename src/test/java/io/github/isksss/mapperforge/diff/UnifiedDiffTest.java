@@ -34,6 +34,23 @@ final class UnifiedDiffTest {
   }
 
   @Test
+  void handlesContentWithoutTrailingNewline() {
+    SourceFile before = new SourceFile("UserMapper.xml", "one\ntwo");
+    SourceFile after = new SourceFile("UserMapper.xml", "one\nTWO");
+
+    assertEquals(
+        """
+        --- UserMapper.xml
+        +++ UserMapper.xml
+        @@ -1,2 +1,2 @@
+         one
+        -two
+        +TWO
+        """,
+        new UnifiedDiff().create(before, after));
+  }
+
+  @Test
   void mapperForgeDiffPrefixesAstDiffWhenStructureChanges() {
     SourceFile before =
         new SourceFile(

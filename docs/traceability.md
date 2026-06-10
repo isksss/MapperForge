@@ -113,7 +113,7 @@ This document maps the main `PLAN.local.md` requirements to implementation and v
 | Comment/CDATA/generic validation | `ValidatorTest` |
 | Whitespace validation when enabled | `ValidatorTest` |
 | Validation error codes and locations | `ValidationError`, `ValidationErrorTest`, `ValidatorTest` |
-| AST diff plus unified diff | `AstDiff`, `UnifiedDiff`, diff tests, dry-run functional test |
+| AST diff plus unified diff | `AstDiff`, `UnifiedDiff`, diff tests, `docs/adr/0089-diff-public-contract.md`, dry-run functional test |
 | Human-readable validation report | `ValidationReportFormatter`, `ValidationReportFormatterTest`, `MapperForgeTask` |
 
 ## Logging

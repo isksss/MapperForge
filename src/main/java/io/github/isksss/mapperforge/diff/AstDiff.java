@@ -14,9 +14,24 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Mapper XML を AST descriptor として比較する差分生成器です。
+ *
+ * <p>整形だけの差分は空文字を返し、属性、SQL、テキスト、CDATA、コメントの構造的な差分だけを `# AST Diff` 形式で返します。
+ */
 public final class AstDiff {
   private final MapperXmlParser parser = new MapperXmlParser();
 
+  /** AST 差分生成器を作成します。 */
+  public AstDiff() {}
+
+  /**
+   * 2 つの Mapper XML の AST descriptor 差分を生成します。
+   *
+   * @param before 比較元
+   * @param after 比較先
+   * @return 構造差分。構造差分がない場合は空文字
+   */
   public String create(SourceFile before, SourceFile after) {
     List<String> beforeDescriptors = descriptors(parser.parse(before));
     List<String> afterDescriptors = descriptors(parser.parse(after));

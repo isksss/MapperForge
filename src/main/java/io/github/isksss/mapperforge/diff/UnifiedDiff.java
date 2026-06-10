@@ -4,7 +4,22 @@ import io.github.isksss.mapperforge.source.SourceFile;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 2 つの source file から unified diff 形式のテキスト差分を生成します。
+ *
+ * <p>MapperForge の dry-run や公開 facade で、実際に変更される行を表示するために使います。
+ */
 public final class UnifiedDiff {
+  /** Unified diff 生成器を作成します。 */
+  public UnifiedDiff() {}
+
+  /**
+   * 2 つの source file の unified diff を生成します。
+   *
+   * @param before 比較元
+   * @param after 比較先
+   * @return unified diff。内容が同一の場合は空文字
+   */
   public String create(SourceFile before, SourceFile after) {
     if (before.content().equals(after.content())) {
       return "";
