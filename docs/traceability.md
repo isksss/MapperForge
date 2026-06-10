@@ -37,6 +37,7 @@ This document maps the main `PLAN.local.md` requirements to implementation and v
 
 | Requirement | Evidence |
 | --- | --- |
+| Public Java facade | `MapperForge`, `MapperForgeTest` |
 | `mapperForgeFormat` | `MapperForgePlugin`, `MapperForgeFormatTask`, functional tests |
 | `mapperForgeCheck` | `MapperForgePlugin`, `MapperForgeCheckTask`, functional tests |
 | `mapperForgeDryRun` | `MapperForgePlugin`, `MapperForgeDryRunTask`, functional tests |
