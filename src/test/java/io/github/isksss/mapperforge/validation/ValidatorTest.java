@@ -2,6 +2,7 @@ package io.github.isksss.mapperforge.validation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.isksss.mapperforge.config.FormatterConfig;
@@ -82,6 +83,33 @@ final class ValidatorTest {
     assertEquals(ErrorCode.VALIDATION_ERROR, result.errors().getFirst().code());
     assertEquals(2, result.errors().getFirst().location().start().line());
     assertEquals(5, result.errors().getFirst().location().start().column());
+  }
+
+  @Test
+  void returnsImmutableValidationErrors() {
+    SourceFile before =
+        new SourceFile(
+            "before.xml",
+            """
+            <mapper namespace="sample">
+                <unknown a="1"/>
+            </mapper>
+            """);
+    SourceFile after =
+        new SourceFile(
+            "after.xml",
+            """
+            <mapper namespace="sample">
+                <unknown a="2"/>
+            </mapper>
+            """);
+
+    ValidationResult result = validator.validate(before, after, FormatterConfig.defaults());
+
+    assertFalse(result.success());
+    assertThrows(
+        UnsupportedOperationException.class,
+        () -> result.errors().add(new ValidationError(ErrorType.XML, "extra", null)));
   }
 
   @Test

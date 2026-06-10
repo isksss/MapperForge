@@ -42,6 +42,12 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Mapper XML の整形前後を比較し、意味変更がないことを検証します。
+ *
+ * <p>XML AST、placeholder、SQL statement、OGNL expression、comment、CDATA、preserveWhitespace
+ * 設定時の空白を検証対象にします。
+ */
 public final class Validator {
   private static final Pattern PLACEHOLDER = Pattern.compile("[$#]\\{[^}]+}");
   private static final Pattern CDATA = Pattern.compile("<!\\[CDATA\\[.*?]]>", Pattern.DOTALL);
@@ -65,6 +71,17 @@ public final class Validator {
   private final PlaceholderParser placeholderParser = new PlaceholderParser();
   private final OgnlFormatter ognlFormatter = new OgnlFormatter();
 
+  /** Validator を作成します。 */
+  public Validator() {}
+
+  /**
+   * 整形前後の Mapper XML を検証します。
+   *
+   * @param before 整形前の source
+   * @param after 整形後の source
+   * @param config formatter 設定
+   * @return validation result
+   */
   public ValidationResult validate(SourceFile before, SourceFile after, FormatterConfig config) {
     MapperForgeLoggers.VALIDATOR.debug("Validating formatted mapper XML: {}", before.fileName());
     List<ValidationError> errors = new ArrayList<>();
