@@ -1,0 +1,1 @@
+<mapper namespace="sample.UserMapper"><select id="find" resultType="User">select id, name, email from users where active = 1 order by name asc</select></mapper>

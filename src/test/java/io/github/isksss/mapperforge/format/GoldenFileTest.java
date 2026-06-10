@@ -24,7 +24,13 @@ import org.junit.jupiter.api.TestFactory;
 
 final class GoldenFileTest {
   private static final Set<String> CUSTOM_CONFIG_GOLDEN_FILES =
-      Set.of("attribute-layout", "attribute-order", "ast-sql-printer", "tag-wrap-always");
+      Set.of(
+          "attribute-layout",
+          "attribute-order",
+          "ast-sql-printer",
+          "sql-compact",
+          "sql-single-line",
+          "tag-wrap-always");
   private final MapperForge mapperForge = new MapperForge();
 
   @TestFactory
@@ -71,6 +77,16 @@ final class GoldenFileTest {
   }
 
   @Test
+  void appliesCompactSqlStyle() throws IOException {
+    assertGolden("sql-compact", configFor("sql-compact"));
+  }
+
+  @Test
+  void appliesSingleLineSqlStyle() throws IOException {
+    assertGolden("sql-single-line", configFor("sql-single-line"));
+  }
+
+  @Test
   void appliesAlwaysTagWrapStyle() throws IOException {
     assertGolden("tag-wrap-always", configFor("tag-wrap-always"));
   }
@@ -102,6 +118,12 @@ final class GoldenFileTest {
     }
     if ("ast-sql-printer".equals(goldenName)) {
       return astSqlPrinterConfig();
+    }
+    if ("sql-compact".equals(goldenName)) {
+      return sqlStyleConfig(io.github.isksss.mapperforge.config.SqlFormatStyle.COMPACT);
+    }
+    if ("sql-single-line".equals(goldenName)) {
+      return sqlStyleConfig(io.github.isksss.mapperforge.config.SqlFormatStyle.SINGLE_LINE);
     }
     if ("tag-wrap-always".equals(goldenName)) {
       return tagWrapAlwaysConfig();
@@ -185,6 +207,28 @@ final class GoldenFileTest {
         defaults.sqlFormatStyle(),
         defaults.sqlPrinter(),
         TagWrapStyle.ALWAYS,
+        defaults.attributeLayout(),
+        defaults.preserveWhitespace(),
+        defaults.preserveCdata(),
+        defaults.formatSqlInsideCdata(),
+        defaults.strict(),
+        defaults.attributeOrder());
+  }
+
+  private FormatterConfig sqlStyleConfig(
+      io.github.isksss.mapperforge.config.SqlFormatStyle sqlFormatStyle) {
+    FormatterConfig defaults = FormatterConfig.defaults();
+    return new FormatterConfig(
+        defaults.dialect(),
+        defaults.formatterVersion(),
+        defaults.include(),
+        defaults.exclude(),
+        defaults.indentSize(),
+        defaults.maxLineLength(),
+        defaults.lineEnding(),
+        sqlFormatStyle,
+        defaults.sqlPrinter(),
+        defaults.tagWrapStyle(),
         defaults.attributeLayout(),
         defaults.preserveWhitespace(),
         defaults.preserveCdata(),
