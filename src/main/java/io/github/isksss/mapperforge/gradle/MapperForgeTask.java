@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.gradle.api.DefaultTask;
@@ -213,22 +214,35 @@ public abstract class MapperForgeTask extends DefaultTask {
 
   private FormatterConfig config() {
     return new FormatterConfig(
-        Dialect.valueOf(getDialect().get()),
+        enumValue("dialect", Dialect.class, getDialect().get()),
         getFormatterVersion().get(),
         getInclude().get(),
         getExclude().get(),
         getIndentSize().get(),
         getMaxLineLength().get(),
         getLineEnding().get(),
-        SqlFormatStyle.valueOf(getSqlFormatStyle().get()),
-        SqlPrinter.valueOf(getSqlPrinter().get()),
-        TagWrapStyle.valueOf(getTagWrapStyle().get()),
-        AttributeLayout.valueOf(getAttributeLayout().get()),
+        enumValue("sqlFormatStyle", SqlFormatStyle.class, getSqlFormatStyle().get()),
+        enumValue("sqlPrinter", SqlPrinter.class, getSqlPrinter().get()),
+        enumValue("tagWrapStyle", TagWrapStyle.class, getTagWrapStyle().get()),
+        enumValue("attributeLayout", AttributeLayout.class, getAttributeLayout().get()),
         getPreserveWhitespace().get(),
         getPreserveCdata().get(),
         getFormatSqlInsideCdata().get(),
         getStrict().get(),
         Map.copyOf(getAttributeOrder().get()));
+  }
+
+  private <E extends Enum<E>> E enumValue(String key, Class<E> type, String raw) {
+    try {
+      return Enum.valueOf(type, raw);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(
+          key + " must be one of " + allowedValues(type) + ": " + raw, e);
+    }
+  }
+
+  private <E extends Enum<E>> List<String> allowedValues(Class<E> type) {
+    return Arrays.stream(type.getEnumConstants()).map(Enum::name).toList();
   }
 
   private boolean isMapperXml(java.nio.file.Path path) {

@@ -228,6 +228,34 @@ final class MapperForgePluginFunctionalTest {
   }
 
   @Test
+  void gradleDslRejectsInvalidEnumValueWithAllowedValues() throws IOException {
+    writeProject(
+        """
+        mapperForge {
+            sqlPrinter = "bogus"
+        }
+        """);
+    Path mapper = projectDir.resolve("src/main/resources/sample/UserMapper.xml");
+    Files.createDirectories(mapper.getParent());
+    Files.writeString(
+        mapper,
+        "<mapper namespace=\"sample.UserMapper\"><select id=\"find\">select id from users</select></mapper>",
+        StandardCharsets.UTF_8);
+
+    var result =
+        GradleRunner.create()
+            .withProjectDir(projectDir.toFile())
+            .withPluginClasspath()
+            .withArguments("mapperForgeFormat")
+            .buildAndFail();
+
+    assertTrue(
+        result
+            .getOutput()
+            .contains("CONFIG_ERROR: sqlPrinter must be one of [LEGACY, AST]: bogus"));
+  }
+
+  @Test
   void gradleDslNormalizesLineEndingAlias() throws IOException {
     writeProject(
         """
