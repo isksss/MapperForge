@@ -160,7 +160,7 @@ public final class MapperXmlFormatter {
   private void appendText(
       StringBuilder out, String text, String parentTag, int depth, FormatterConfig config) {
     String formatted =
-        SQL_TEXT_TAGS.contains(parentTag) ? sqlFormatter.format(text, config) : text.strip();
+        SQL_TEXT_TAGS.contains(parentTag) ? sqlFormatter.formatLegacy(text, config) : text.strip();
     if (formatted.isBlank()) {
       return;
     }
@@ -175,7 +175,8 @@ public final class MapperXmlFormatter {
 
   private void appendCdata(StringBuilder out, String raw, int depth, FormatterConfig config) {
     newline(out, depth, config);
-    String text = config.formatSqlInsideCdata() ? sqlFormatter.format(raw, config) : raw.strip();
+    String text =
+        config.formatSqlInsideCdata() ? sqlFormatter.formatLegacy(raw, config) : raw.strip();
     out.append("<![CDATA[").append(text).append("]]>");
   }
 

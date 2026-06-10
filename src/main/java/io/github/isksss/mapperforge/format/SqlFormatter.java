@@ -1,7 +1,11 @@
 package io.github.isksss.mapperforge.format;
 
+import io.github.isksss.mapperforge.ast.sql.UnknownStatement;
 import io.github.isksss.mapperforge.config.FormatterConfig;
 import io.github.isksss.mapperforge.config.SqlFormatStyle;
+import io.github.isksss.mapperforge.parse.sql.SqlStatementParser;
+import io.github.isksss.mapperforge.print.LayoutEngine;
+import io.github.isksss.mapperforge.print.SqlAstPrinter;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
@@ -43,6 +47,34 @@ public final class SqlFormatter {
     if (config.sqlFormatStyle() == SqlFormatStyle.SINGLE_LINE) {
       return upper;
     }
+    String astFormatted = formatWithAstPrinter(compact, config);
+    if (!astFormatted.isBlank()) {
+      return astFormatted;
+    }
+    return formatWithRegex(upper, config);
+  }
+
+  public String formatLegacy(String sql, FormatterConfig config) {
+    String compact = sql.strip().replaceAll("\\s+", " ");
+    if (compact.isBlank()) {
+      return "";
+    }
+    String upper = uppercaseKeywords(compact);
+    if (config.sqlFormatStyle() == SqlFormatStyle.SINGLE_LINE) {
+      return upper;
+    }
+    return formatWithRegex(upper, config);
+  }
+
+  private String formatWithAstPrinter(String sql, FormatterConfig config) {
+    var statement = new SqlStatementParser(sql).parse();
+    if (statement instanceof UnknownStatement) {
+      return "";
+    }
+    return LayoutEngine.render(new SqlAstPrinter().print(statement), config).strip();
+  }
+
+  private String formatWithRegex(String upper, FormatterConfig config) {
     String formatted = upper;
     for (String keyword : CLAUSE_KEYWORDS) {
       formatted = formatted.replaceAll(clausePattern(keyword), "\n" + keyword);

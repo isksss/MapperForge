@@ -15,8 +15,9 @@ MapperForge は SQL Statement/Expression AST と Document Model を追加済み�
 - `SELECT`、`INSERT`、`UPDATE`、`DELETE` の主要句を構造化して出力する
 - `Expression` は対応済み AST を文字列表現へ戻す
 - 未知 statement/expression は normalized raw に fallback する
-- 現時点では既存 `SqlFormatter` へ全面接続せず、JUnit で printer の出力契約を先に固定する
+- `SqlFormatter.format` は対応済み statement で AST printer 経路を使う
+- 既存 XML golden file 互換を守るため、`MapperXmlFormatter` は当面 `SqlFormatter.formatLegacy` を使う
 
 ## Consequences
 
-SQL printer を文字列置換から AST/Doc ベースへ段階移行できる。既存 golden file の互換性を壊さないよう、`SqlFormatter` への接続は golden file test を追加しながら進める。
+SQL printer を文字列置換から AST/Doc ベースへ段階移行できる。既存 golden file の互換性を壊さないよう、XML formatter への接続は golden file test を追加しながら進める。
