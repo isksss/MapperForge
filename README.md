@@ -28,6 +28,8 @@ Dockerized MyBatis integration tests:
 ./gradlew integrationTest
 ```
 
+See [docs/configuration.md](docs/configuration.md) for all configuration options.
+
 ## GitHub Packages
 
 MapperForge can be consumed as a Gradle plugin from GitHub Packages.
