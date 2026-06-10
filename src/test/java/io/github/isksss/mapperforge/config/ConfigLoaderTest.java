@@ -62,6 +62,39 @@ final class ConfigLoaderTest {
   }
 
   @Test
+  void rejectsInvalidIndentSize() throws IOException {
+    Path config = tempDir.resolve("mapperforge.yml");
+    Files.writeString(config, "indentSize: -1\n", StandardCharsets.UTF_8);
+
+    IllegalArgumentException error =
+        assertThrows(IllegalArgumentException.class, () -> new ConfigLoader().load(config));
+
+    assertEquals("indentSize must be zero or greater: -1", error.getMessage());
+  }
+
+  @Test
+  void rejectsInvalidMaxLineLength() throws IOException {
+    Path config = tempDir.resolve("mapperforge.yml");
+    Files.writeString(config, "maxLineLength: 0\n", StandardCharsets.UTF_8);
+
+    IllegalArgumentException error =
+        assertThrows(IllegalArgumentException.class, () -> new ConfigLoader().load(config));
+
+    assertEquals("maxLineLength must be greater than zero: 0", error.getMessage());
+  }
+
+  @Test
+  void rejectsInvalidLineEnding() throws IOException {
+    Path config = tempDir.resolve("mapperforge.yml");
+    Files.writeString(config, "lineEnding: CR\n", StandardCharsets.UTF_8);
+
+    IllegalArgumentException error =
+        assertThrows(IllegalArgumentException.class, () -> new ConfigLoader().load(config));
+
+    assertEquals("lineEnding must be LF or CRLF: CR", error.getMessage());
+  }
+
+  @Test
   void normalizesLineEndingAliases() {
     FormatterConfig crlf =
         new FormatterConfig(

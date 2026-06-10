@@ -199,6 +199,31 @@ final class MapperForgePluginFunctionalTest {
   }
 
   @Test
+  void gradleDslRejectsInvalidIndentSize() throws IOException {
+    writeProject(
+        """
+        mapperForge {
+            indentSize = -1
+        }
+        """);
+    Path mapper = projectDir.resolve("src/main/resources/sample/UserMapper.xml");
+    Files.createDirectories(mapper.getParent());
+    Files.writeString(
+        mapper,
+        "<mapper namespace=\"sample.UserMapper\"><select id=\"find\">select id from users</select></mapper>",
+        StandardCharsets.UTF_8);
+
+    var result =
+        GradleRunner.create()
+            .withProjectDir(projectDir.toFile())
+            .withPluginClasspath()
+            .withArguments("mapperForgeFormat")
+            .buildAndFail();
+
+    assertTrue(result.getOutput().contains("indentSize must be zero or greater: -1"));
+  }
+
+  @Test
   void gradleDslNormalizesLineEndingAlias() throws IOException {
     writeProject(
         """

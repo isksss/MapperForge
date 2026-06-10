@@ -24,6 +24,13 @@ public record FormatterConfig(
     if (!isSemVer(formatterVersion)) {
       throw new IllegalArgumentException("formatterVersion must be SemVer: " + formatterVersion);
     }
+    if (indentSize < 0) {
+      throw new IllegalArgumentException("indentSize must be zero or greater: " + indentSize);
+    }
+    if (maxLineLength <= 0) {
+      throw new IllegalArgumentException(
+          "maxLineLength must be greater than zero: " + maxLineLength);
+    }
     lineEnding = normalizeLineEnding(lineEnding);
   }
 
@@ -61,7 +68,8 @@ public record FormatterConfig(
     return switch (value) {
       case "LF", "\\n" -> "\n";
       case "CRLF", "\\r\\n" -> "\r\n";
-      default -> value;
+      case "\n", "\r\n" -> value;
+      default -> throw new IllegalArgumentException("lineEnding must be LF or CRLF: " + value);
     };
   }
 }
