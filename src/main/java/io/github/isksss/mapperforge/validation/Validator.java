@@ -2,6 +2,7 @@ package io.github.isksss.mapperforge.validation;
 
 import io.github.isksss.mapperforge.ast.mapper.CDataNode;
 import io.github.isksss.mapperforge.ast.mapper.CommentNode;
+import io.github.isksss.mapperforge.ast.mapper.ElementNode;
 import io.github.isksss.mapperforge.ast.mapper.GenericElementNode;
 import io.github.isksss.mapperforge.ast.mapper.MapperNode;
 import io.github.isksss.mapperforge.ast.mapper.TextNode;
@@ -60,7 +61,7 @@ public final class Validator {
       case TextNode ignored -> new TextNode(TextType.PLAIN_TEXT, "");
       case CommentNode comment -> comment;
       case CDataNode cdata -> cdata;
-      case GenericElementNode element ->
+      case ElementNode element ->
           new GenericElementNode(
               element.tagName(),
               element.attributes(),

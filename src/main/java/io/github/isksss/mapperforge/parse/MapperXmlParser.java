@@ -1,14 +1,39 @@
 package io.github.isksss.mapperforge.parse;
 
 import com.ctc.wstx.stax.WstxInputFactory;
+import io.github.isksss.mapperforge.ast.mapper.ArgElementNode;
+import io.github.isksss.mapperforge.ast.mapper.AssociationElementNode;
 import io.github.isksss.mapperforge.ast.mapper.AttributeNode;
+import io.github.isksss.mapperforge.ast.mapper.BindElementNode;
 import io.github.isksss.mapperforge.ast.mapper.CDataNode;
+import io.github.isksss.mapperforge.ast.mapper.CaseElementNode;
+import io.github.isksss.mapperforge.ast.mapper.ChooseElementNode;
+import io.github.isksss.mapperforge.ast.mapper.CollectionElementNode;
 import io.github.isksss.mapperforge.ast.mapper.CommentNode;
 import io.github.isksss.mapperforge.ast.mapper.CommentType;
+import io.github.isksss.mapperforge.ast.mapper.ConstructorElementNode;
+import io.github.isksss.mapperforge.ast.mapper.DeleteElementNode;
+import io.github.isksss.mapperforge.ast.mapper.DiscriminatorElementNode;
+import io.github.isksss.mapperforge.ast.mapper.ElementNode;
+import io.github.isksss.mapperforge.ast.mapper.ForeachElementNode;
 import io.github.isksss.mapperforge.ast.mapper.GenericElementNode;
+import io.github.isksss.mapperforge.ast.mapper.IdArgElementNode;
+import io.github.isksss.mapperforge.ast.mapper.IfElementNode;
+import io.github.isksss.mapperforge.ast.mapper.IncludeElementNode;
+import io.github.isksss.mapperforge.ast.mapper.InsertElementNode;
+import io.github.isksss.mapperforge.ast.mapper.MapperElementNode;
 import io.github.isksss.mapperforge.ast.mapper.MapperNode;
+import io.github.isksss.mapperforge.ast.mapper.OtherwiseElementNode;
+import io.github.isksss.mapperforge.ast.mapper.ResultMapElementNode;
+import io.github.isksss.mapperforge.ast.mapper.SelectElementNode;
+import io.github.isksss.mapperforge.ast.mapper.SetElementNode;
+import io.github.isksss.mapperforge.ast.mapper.SqlElementNode;
 import io.github.isksss.mapperforge.ast.mapper.TextNode;
 import io.github.isksss.mapperforge.ast.mapper.TextType;
+import io.github.isksss.mapperforge.ast.mapper.TrimElementNode;
+import io.github.isksss.mapperforge.ast.mapper.UpdateElementNode;
+import io.github.isksss.mapperforge.ast.mapper.WhenElementNode;
+import io.github.isksss.mapperforge.ast.mapper.WhereElementNode;
 import io.github.isksss.mapperforge.source.SourceFile;
 import java.io.StringReader;
 import java.util.ArrayDeque;
@@ -21,21 +46,21 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 public final class MapperXmlParser {
-  public Optional<GenericElementNode> parseMapper(SourceFile source) {
-    GenericElementNode root = parse(source);
-    if (!"mapper".equals(root.tagName())) {
+  public Optional<MapperElementNode> parseMapper(SourceFile source) {
+    ElementNode root = parse(source);
+    if (!(root instanceof MapperElementNode mapper)) {
       return Optional.empty();
     }
-    return Optional.of(root);
+    return Optional.of(mapper);
   }
 
-  public GenericElementNode parse(SourceFile source) {
+  public ElementNode parse(SourceFile source) {
     XMLInputFactory factory = new WstxInputFactory();
     try {
       XMLStreamReader reader =
           factory.createXMLStreamReader(source.fileName(), new StringReader(source.content()));
       ArrayDeque<ElementBuilder> stack = new ArrayDeque<>();
-      GenericElementNode root = null;
+      ElementNode root = null;
 
       while (reader.hasNext()) {
         int event = reader.next();
@@ -60,7 +85,7 @@ public final class MapperXmlParser {
             }
           }
           case XMLStreamConstants.END_ELEMENT -> {
-            GenericElementNode element = stack.pop().build();
+            ElementNode element = stack.pop().build();
             if (stack.isEmpty()) {
               root = element;
             } else {
@@ -90,8 +115,37 @@ public final class MapperXmlParser {
 
   private record ElementBuilder(
       String tagName, List<AttributeNode> attributes, List<MapperNode> children) {
-    GenericElementNode build() {
-      return new GenericElementNode(tagName, List.copyOf(attributes), List.copyOf(children));
+    ElementNode build() {
+      List<AttributeNode> immutableAttributes = List.copyOf(attributes);
+      List<MapperNode> immutableChildren = List.copyOf(children);
+      return switch (tagName) {
+        case "mapper" -> new MapperElementNode(immutableAttributes, immutableChildren);
+        case "select" -> new SelectElementNode(immutableAttributes, immutableChildren);
+        case "insert" -> new InsertElementNode(immutableAttributes, immutableChildren);
+        case "update" -> new UpdateElementNode(immutableAttributes, immutableChildren);
+        case "delete" -> new DeleteElementNode(immutableAttributes, immutableChildren);
+        case "sql" -> new SqlElementNode(immutableAttributes, immutableChildren);
+        case "resultMap" -> new ResultMapElementNode(immutableAttributes, immutableChildren);
+        case "association" -> new AssociationElementNode(immutableAttributes, immutableChildren);
+        case "collection" -> new CollectionElementNode(immutableAttributes, immutableChildren);
+        case "constructor" -> new ConstructorElementNode(immutableAttributes, immutableChildren);
+        case "arg" -> new ArgElementNode(immutableAttributes, immutableChildren);
+        case "idArg" -> new IdArgElementNode(immutableAttributes, immutableChildren);
+        case "discriminator" ->
+            new DiscriminatorElementNode(immutableAttributes, immutableChildren);
+        case "case" -> new CaseElementNode(immutableAttributes, immutableChildren);
+        case "if" -> new IfElementNode(immutableAttributes, immutableChildren);
+        case "choose" -> new ChooseElementNode(immutableAttributes, immutableChildren);
+        case "when" -> new WhenElementNode(immutableAttributes, immutableChildren);
+        case "otherwise" -> new OtherwiseElementNode(immutableAttributes, immutableChildren);
+        case "foreach" -> new ForeachElementNode(immutableAttributes, immutableChildren);
+        case "trim" -> new TrimElementNode(immutableAttributes, immutableChildren);
+        case "where" -> new WhereElementNode(immutableAttributes, immutableChildren);
+        case "set" -> new SetElementNode(immutableAttributes, immutableChildren);
+        case "include" -> new IncludeElementNode(immutableAttributes, immutableChildren);
+        case "bind" -> new BindElementNode(immutableAttributes, immutableChildren);
+        default -> new GenericElementNode(tagName, immutableAttributes, immutableChildren);
+      };
     }
   }
 
