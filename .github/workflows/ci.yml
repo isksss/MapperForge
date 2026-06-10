@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up mise
+        uses: jdx/mise-action@v3
+
+      - name: Verify
+        run: mise exec java@temurin-21 -- ./gradlew spotlessCheck build integrationTest
+
+      - name: Verify local plugin publication
+        run: mise exec java@temurin-21 -- ./gradlew publishToMavenLocal -PreleaseVersion=0.1.0-ci
