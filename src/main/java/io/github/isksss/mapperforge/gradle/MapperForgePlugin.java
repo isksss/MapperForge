@@ -3,7 +3,13 @@ package io.github.isksss.mapperforge.gradle;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
+/** MapperForge の Gradle plugin エントリポイントです。 */
 public final class MapperForgePlugin implements Plugin<Project> {
+  /**
+   * MapperForge extension と Gradle タスクを登録します。
+   *
+   * @param project plugin を適用する Gradle project
+   */
   @Override
   public void apply(Project project) {
     MapperForgeExtension extension =
