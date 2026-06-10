@@ -56,7 +56,7 @@ This document maps the main `PLAN.local.md` requirements to implementation and v
 | `GenericElement` fallback | `GenericElementNode`, `MapperXmlParserTest`, `ValidatorTest` |
 | `TextNode`, `CommentNode`, `CDataNode` | `ast/mapper`, golden files, `ValidatorTest` |
 | Placeholder parser | `PlaceholderParser`, `PlaceholderParserTest` |
-| Source position records | `SourceFile`, `Position`, `Range`, `Token` |
+| Source position records | `SourceFile`, `Position`, `Range`, `Token`, `SourceModelTest` |
 
 ## SQL
 
