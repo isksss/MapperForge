@@ -109,6 +109,14 @@ This document maps the main `PLAN.local.md` requirements to implementation and v
 | AST diff plus unified diff | `AstDiff`, `UnifiedDiff`, diff tests, dry-run functional test |
 | Human-readable validation report | `ValidationReportFormatter`, `ValidationReportFormatterTest`, `MapperForgeTask` |
 
+## Logging
+
+| Requirement | Evidence |
+| --- | --- |
+| SLF4J logging | `MapperForgeLoggers`, Gradle dependencies |
+| Parser/formatter/validator/gradle categories | `MapperForgeLoggers`, `MapperForgeLoggersTest` |
+| Central logger usage | `MapperXmlParser`, `MapperXmlFormatter`, `Validator`, `MapperForgeTask`, `MapperForgeLoggersTest` |
+
 ## Integration And Quality Gates
 
 | Requirement | Evidence |
