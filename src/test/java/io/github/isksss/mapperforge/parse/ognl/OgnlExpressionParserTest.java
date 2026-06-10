@@ -40,6 +40,24 @@ final class OgnlExpressionParserTest {
   }
 
   @Test
+  void parsesComparisonOperatorsAndPropertyAccessAsStableNames() {
+    OgnlBinaryExpression expression =
+        assertInstanceOf(
+            OgnlBinaryExpression.class,
+            parse("user.profile.age >= 20 && user.profile.age <= maxAge"));
+
+    assertEquals("&&", expression.operator());
+    OgnlBinaryExpression left = assertInstanceOf(OgnlBinaryExpression.class, expression.left());
+    assertEquals(">=", left.operator());
+    assertName("user.profile.age", left.left());
+    assertEquals("20", assertInstanceOf(OgnlLiteralExpression.class, left.right()).value());
+    OgnlBinaryExpression right = assertInstanceOf(OgnlBinaryExpression.class, expression.right());
+    assertEquals("<=", right.operator());
+    assertName("user.profile.age", right.left());
+    assertName("maxAge", right.right());
+  }
+
+  @Test
   void parsesMethodCallsAndCollectionLiterals() {
     OgnlBinaryExpression expression =
         assertInstanceOf(

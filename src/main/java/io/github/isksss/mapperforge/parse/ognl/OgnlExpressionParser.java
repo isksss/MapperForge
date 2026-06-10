@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+/** OGNL expression を recoverable に AST へ変換する Pratt parser です。 */
 public final class OgnlExpressionParser {
   private static final Map<String, Integer> PRECEDENCE =
       Map.ofEntries(
@@ -35,11 +36,21 @@ public final class OgnlExpressionParser {
   private final List<Token> tokens;
   private int current;
 
+  /**
+   * parser を初期化します。
+   *
+   * @param expression parse 対象の OGNL expression
+   */
   public OgnlExpressionParser(String expression) {
     this.expression = expression.strip();
     this.tokens = new OgnlTokenizer(this.expression).tokenize();
   }
 
+  /**
+   * OGNL expression を parse します。
+   *
+   * @return parse できた AST。未対応または不正な式は {@link OgnlUnknownExpression}
+   */
   public OgnlExpression parse() {
     try {
       OgnlExpression parsed = parseExpression(0);
