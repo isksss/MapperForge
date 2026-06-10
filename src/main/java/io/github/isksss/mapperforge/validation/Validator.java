@@ -2,6 +2,7 @@ package io.github.isksss.mapperforge.validation;
 
 import io.github.isksss.mapperforge.ast.mapper.CDataNode;
 import io.github.isksss.mapperforge.ast.mapper.CommentNode;
+import io.github.isksss.mapperforge.ast.mapper.CommentType;
 import io.github.isksss.mapperforge.ast.mapper.ElementNode;
 import io.github.isksss.mapperforge.ast.mapper.GenericElementNode;
 import io.github.isksss.mapperforge.ast.mapper.MapperNode;
@@ -41,7 +42,6 @@ import java.util.regex.Pattern;
 
 public final class Validator {
   private static final Pattern PLACEHOLDER = Pattern.compile("[$#]\\{[^}]+}");
-  private static final Pattern COMMENT = Pattern.compile("<!--.*?-->", Pattern.DOTALL);
   private static final Pattern CDATA = Pattern.compile("<!\\[CDATA\\[.*?]]>", Pattern.DOTALL);
   private static final Pattern TAG_BOUNDARY_WHITESPACE = Pattern.compile(">(\\s+)<");
   private final MapperXmlParser parser = new MapperXmlParser();
@@ -112,7 +112,8 @@ public final class Validator {
   }
 
   private ErrorType classifyAstChange(String before, String after, FormatterConfig config) {
-    if (!find(COMMENT, before).equals(find(COMMENT, after))) {
+    if (!commentSignatures(parser.parse(new SourceFile("before.xml", before)))
+        .equals(commentSignatures(parser.parse(new SourceFile("after.xml", after))))) {
       return ErrorType.COMMENT;
     }
     if (config.preserveCdata()
@@ -169,6 +170,21 @@ public final class Validator {
     return List.copyOf(expressions);
   }
 
+  private List<Object> commentSignatures(MapperNode node) {
+    List<Object> comments = new ArrayList<>();
+    collectCommentSignatures(node, comments);
+    return List.copyOf(comments);
+  }
+
+  private void collectCommentSignatures(MapperNode node, List<Object> comments) {
+    switch (node) {
+      case CommentNode comment -> comments.add(List.of(comment.type(), comment.content()));
+      case ElementNode element ->
+          element.children().forEach(child -> collectCommentSignatures(child, comments));
+      default -> {}
+    }
+  }
+
   private void collectOgnlExpressionSignatures(MapperNode node, List<Object> expressions) {
     if (node instanceof ElementNode element) {
       element.attributes().stream()
@@ -198,10 +214,39 @@ public final class Validator {
               .filter(Statement.class::isInstance)
               .map(Statement.class::cast)
               .ifPresent(sql -> statements.add(statementSignature(sql)));
-      case ElementNode element ->
-          element.children().forEach(child -> collectSqlStatementSignatures(child, statements));
+      case ElementNode element -> collectElementSqlStatementSignatures(element, statements);
       default -> {}
     }
+  }
+
+  private void collectElementSqlStatementSignatures(ElementNode element, List<Object> statements) {
+    StringBuilder sqlBuffer = new StringBuilder();
+    for (MapperNode child : element.children()) {
+      if (child instanceof TextNode text && text.type() == TextType.SQL) {
+        appendSqlChunk(sqlBuffer, text.value());
+      } else if (child instanceof CommentNode comment && comment.type() == CommentType.SQL) {
+        appendSqlChunk(sqlBuffer, comment.content());
+      } else {
+        flushSqlBuffer(sqlBuffer, statements);
+        collectSqlStatementSignatures(child, statements);
+      }
+    }
+    flushSqlBuffer(sqlBuffer, statements);
+  }
+
+  private void appendSqlChunk(StringBuilder sqlBuffer, String chunk) {
+    if (!sqlBuffer.isEmpty()) {
+      sqlBuffer.append('\n');
+    }
+    sqlBuffer.append(chunk);
+  }
+
+  private void flushSqlBuffer(StringBuilder sqlBuffer, List<Object> statements) {
+    if (sqlBuffer.isEmpty()) {
+      return;
+    }
+    statements.add(statementSignature(new SqlStatementParser(sqlBuffer.toString()).parse()));
+    sqlBuffer.setLength(0);
   }
 
   private Object statementSignature(Statement statement) {

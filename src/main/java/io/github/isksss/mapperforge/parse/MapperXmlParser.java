@@ -36,7 +36,10 @@ import io.github.isksss.mapperforge.ast.mapper.WhenElementNode;
 import io.github.isksss.mapperforge.ast.mapper.WhereElementNode;
 import io.github.isksss.mapperforge.logging.MapperForgeLoggers;
 import io.github.isksss.mapperforge.parse.sql.SqlStatementParser;
+import io.github.isksss.mapperforge.parse.sql.SqlTokenizer;
 import io.github.isksss.mapperforge.source.SourceFile;
+import io.github.isksss.mapperforge.token.Token;
+import io.github.isksss.mapperforge.token.TokenType;
 import java.io.StringReader;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -80,24 +83,26 @@ public final class MapperXmlParser {
       XMLStreamReader reader =
           factory.createXMLStreamReader(source.fileName(), new StringReader(source.content()));
       ArrayDeque<ElementBuilder> stack = new ArrayDeque<>();
+      StringBuilder textBuffer = new StringBuilder();
       ElementNode root = null;
 
       while (reader.hasNext()) {
         int event = reader.next();
         switch (event) {
-          case XMLStreamConstants.START_ELEMENT -> stack.push(startElement(reader));
+          case XMLStreamConstants.START_ELEMENT -> {
+            flushText(stack, textBuffer);
+            stack.push(startElement(reader));
+          }
           case XMLStreamConstants.CHARACTERS, XMLStreamConstants.SPACE -> {
             if (!stack.isEmpty()) {
               String text = reader.getText();
               if (!text.isBlank()) {
-                stack
-                    .peek()
-                    .children()
-                    .add(new TextNode(textType(stack.peek().tagName()), text.strip()));
+                textBuffer.append(text);
               }
             }
           }
           case XMLStreamConstants.CDATA -> {
+            flushText(stack, textBuffer);
             if (!stack.isEmpty()) {
               String raw = reader.getText();
               stack
@@ -107,11 +112,13 @@ public final class MapperXmlParser {
             }
           }
           case XMLStreamConstants.COMMENT -> {
+            flushText(stack, textBuffer);
             if (!stack.isEmpty()) {
               stack.peek().children().add(new CommentNode(CommentType.XML, reader.getText()));
             }
           }
           case XMLStreamConstants.END_ELEMENT -> {
+            flushText(stack, textBuffer);
             ElementNode element = stack.pop().build();
             if (stack.isEmpty()) {
               root = element;
@@ -140,8 +147,49 @@ public final class MapperXmlParser {
     return new ElementBuilder(reader.getLocalName(), attributes, new ArrayList<>());
   }
 
+  private void flushText(ArrayDeque<ElementBuilder> stack, StringBuilder textBuffer) {
+    if (stack.isEmpty() || textBuffer.isEmpty()) {
+      return;
+    }
+    stack.peek().children().addAll(textNodes(stack.peek().tagName(), textBuffer.toString()));
+    textBuffer.setLength(0);
+  }
+
   private TextType textType(String tagName) {
     return SQL_TEXT_TAGS.contains(tagName) ? TextType.SQL : TextType.PLAIN_TEXT;
+  }
+
+  private List<MapperNode> textNodes(String tagName, String text) {
+    TextType type = textType(tagName);
+    if (type != TextType.SQL) {
+      return List.of(new TextNode(type, text.strip()));
+    }
+    List<MapperNode> nodes = new ArrayList<>();
+    int offset = 0;
+    for (Token token : new SqlTokenizer(text).tokenize()) {
+      if (token.type() != TokenType.COMMENT) {
+        continue;
+      }
+      int start = token.range().start().offset();
+      if (offset < start) {
+        addSqlTextNode(nodes, text.substring(offset, start));
+      }
+      nodes.add(new CommentNode(CommentType.SQL, token.text()));
+      offset = token.range().end().offset();
+    }
+    if (offset < text.length()) {
+      addSqlTextNode(nodes, text.substring(offset));
+    }
+    if (nodes.isEmpty()) {
+      addSqlTextNode(nodes, text);
+    }
+    return List.copyOf(nodes);
+  }
+
+  private void addSqlTextNode(List<MapperNode> nodes, String text) {
+    if (!text.isBlank()) {
+      nodes.add(new TextNode(TextType.SQL, text.strip()));
+    }
   }
 
   private record ElementBuilder(

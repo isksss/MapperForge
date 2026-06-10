@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.isksss.mapperforge.ast.mapper.CDataNode;
+import io.github.isksss.mapperforge.ast.mapper.CommentNode;
+import io.github.isksss.mapperforge.ast.mapper.CommentType;
 import io.github.isksss.mapperforge.ast.mapper.GenericElementNode;
 import io.github.isksss.mapperforge.ast.mapper.IfElementNode;
 import io.github.isksss.mapperforge.ast.mapper.MapperElementNode;
@@ -85,5 +87,39 @@ final class MapperXmlParserTest {
     SelectElementNode unknownSelect = (SelectElementNode) mapper.children().get(1);
     CDataNode cdata = (CDataNode) unknownSelect.children().getFirst();
     assertInstanceOf(UnknownStatement.class, cdata.parsed().orElseThrow());
+  }
+
+  @Test
+  void exposesSqlCommentsAsSqlCommentNodes() {
+    MapperElementNode mapper =
+        parser
+            .parseMapper(
+                new SourceFile(
+                    "sql-comments.xml",
+                    """
+                    <mapper namespace="sample.Mapper">
+                      <select id="find">select id -- keep selected columns
+                        from users where active = 1 /* keep filter */
+                      </select>
+                    </mapper>
+                    """))
+            .orElseThrow();
+
+    SelectElementNode select = (SelectElementNode) mapper.children().getFirst();
+
+    assertTrue(
+        select.children().stream()
+            .anyMatch(
+                child ->
+                    child instanceof CommentNode comment
+                        && comment.type() == CommentType.SQL
+                        && comment.content().equals("-- keep selected columns")));
+    assertTrue(
+        select.children().stream()
+            .anyMatch(
+                child ->
+                    child instanceof CommentNode comment
+                        && comment.type() == CommentType.SQL
+                        && comment.content().equals("/* keep filter */")));
   }
 }

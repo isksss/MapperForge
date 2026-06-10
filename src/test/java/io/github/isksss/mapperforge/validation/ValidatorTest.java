@@ -83,6 +83,69 @@ final class ValidatorTest {
   }
 
   @Test
+  void rejectsSqlCommentChanges() {
+    SourceFile before =
+        new SourceFile(
+            "before.xml",
+            """
+            <mapper namespace="sample">
+                <select id="find">
+                    select id -- keep selected columns
+                    from users where active = 1
+                </select>
+            </mapper>
+            """);
+    SourceFile after =
+        new SourceFile(
+            "after.xml",
+            """
+            <mapper namespace="sample">
+                <select id="find">
+                    SELECT
+                        id -- changed comment
+                    FROM users
+                    WHERE active = 1
+                </select>
+            </mapper>
+            """);
+
+    ValidationResult result = validator.validate(before, after, FormatterConfig.defaults());
+
+    assertFalse(result.success());
+    assertEquals(ErrorType.COMMENT, result.errors().getFirst().type());
+  }
+
+  @Test
+  void acceptsSqlFormattingWithPreservedSqlComments() {
+    SourceFile before =
+        new SourceFile(
+            "before.xml",
+            """
+            <mapper namespace="sample">
+                <select id="find">
+                    select id -- keep selected columns
+                    from users where active = 1 /* keep filter */
+                </select>
+            </mapper>
+            """);
+    SourceFile after =
+        new SourceFile(
+            "after.xml",
+            """
+            <mapper namespace="sample">
+                <select id="find">
+                    SELECT
+                        id -- keep selected columns
+                    FROM users
+                    WHERE active = 1 /* keep filter */
+                </select>
+            </mapper>
+            """);
+
+    assertTrue(validator.validate(before, after, FormatterConfig.defaults()).success());
+  }
+
+  @Test
   void rejectsCdataChangesWhenPreserved() {
     SourceFile before =
         new SourceFile(
