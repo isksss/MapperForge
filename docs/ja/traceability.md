@@ -112,7 +112,7 @@
 | Placeholder validation | `PlaceholderParser`, `ValidatorTest` |
 | Comment/CDATA/generic validation | `ValidatorTest` |
 | Whitespace validation when enabled | `ValidatorTest` |
-| Validation error codes and locations | `ValidationError`, `ValidationErrorTest`, `ValidatorTest` |
+| Validation error codes and locations | `ValidationError`, `ValidationResult`, `ValidationErrorTest`, `ValidatorTest`, `docs/ja/adr/0090-validation-result-contract.md` |
 | AST diff plus unified diff | `AstDiff`, `UnifiedDiff`, diff tests, `docs/ja/adr/0089-diff-public-contract.md`, dry-run functional test |
 | Human-readable validation report | `ValidationReportFormatter`, `ValidationReportFormatterTest`, `MapperForgeTask` |
 

@@ -1,8 +1,10 @@
 package io.github.isksss.mapperforge.validation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import io.github.isksss.mapperforge.error.ErrorCode;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -51,5 +53,19 @@ final class ValidationErrorTest {
             "GENERIC_ELEMENT",
             "XML"),
         Arrays.stream(ErrorType.values()).map(Enum::name).toList());
+  }
+
+  @Test
+  void validationResultDefensivelyCopiesErrors() {
+    List<ValidationError> errors = new ArrayList<>();
+    errors.add(new ValidationError(ErrorType.XML, "first", null));
+
+    ValidationResult result = new ValidationResult(false, errors);
+    errors.add(new ValidationError(ErrorType.CDATA, "second", null));
+
+    assertEquals(1, result.errors().size());
+    assertThrows(
+        UnsupportedOperationException.class,
+        () -> result.errors().add(new ValidationError(ErrorType.COMMENT, "third", null)));
   }
 }
