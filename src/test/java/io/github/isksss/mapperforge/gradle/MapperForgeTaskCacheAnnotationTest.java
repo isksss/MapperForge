@@ -1,5 +1,6 @@
 package io.github.isksss.mapperforge.gradle;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.List;
@@ -7,6 +8,8 @@ import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.work.DisableCachingByDefault;
 import org.junit.jupiter.api.Test;
 
@@ -52,5 +55,14 @@ final class MapperForgeTaskCacheAnnotationTest {
     assertNotNull(
         MapperForgeTask.class.getMethod("getSourceFiles").getAnnotation(InputFiles.class));
     assertNotNull(MapperForgeTask.class.getMethod("getStateFile").getAnnotation(OutputFile.class));
+  }
+
+  @Test
+  void sourceFilesUseRelativePathSensitivityForCacheRelocatability() throws NoSuchMethodException {
+    PathSensitive pathSensitive =
+        MapperForgeTask.class.getMethod("getSourceFiles").getAnnotation(PathSensitive.class);
+
+    assertNotNull(pathSensitive);
+    assertEquals(PathSensitivity.RELATIVE, pathSensitive.value());
   }
 }

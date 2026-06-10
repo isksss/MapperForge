@@ -44,7 +44,7 @@
 | `mapperForgeDryRun` | `MapperForgePlugin`, `MapperForgeDryRunTask`, functional tests |
 | Task behavior docs | `docs/tasks.md`, `docs/ja/tasks.md` |
 | Check task cacheability | `MapperForgeCheckTask`, `MapperForgeTaskCacheAnnotationTest` |
-| Check task cache key inputs | `MapperForgeTask` input annotations, `MapperForgeTaskCacheAnnotationTest` |
+| Check task cache key inputs | `MapperForgeTask` input annotations and relative path sensitivity, `MapperForgeTaskCacheAnnotationTest` |
 | Format/dry-run no cache | `MapperForgeFormatTask`, `MapperForgeDryRunTask`, `MapperForgeTaskCacheAnnotationTest` |
 
 ## Parser And AST
