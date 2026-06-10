@@ -73,6 +73,8 @@ public final class SqlStatementParser {
     int orderIndex = topLevelKeywordPair("ORDER", "BY", fromIndex + 1);
     int limitIndex = topLevelKeyword("LIMIT", fromIndex + 1);
     int offsetIndex = topLevelKeyword("OFFSET", fromIndex + 1);
+    int windowIndex = topLevelKeyword("WINDOW", fromIndex + 1);
+    int fetchIndex = topLevelKeyword("FETCH", fromIndex + 1);
     List<Expression> selectItems = parseExpressionList(tokensBetween(1, fromIndex));
     int fromEnd = nextClauseIndex(fromIndex);
     int firstJoinIndex = firstJoinIndex(fromIndex + 1, fromEnd);
@@ -110,8 +112,27 @@ public final class SqlStatementParser {
             ? new SqlExpressionParser(tokensBetween(offsetIndex + 1, nextClauseIndex(offsetIndex)))
                 .parse()
             : new UnknownExpression("");
+    List<SelectStatement.WindowItem> windows =
+        windowIndex >= 0
+            ? parseWindows(tokensBetween(windowIndex + 1, nextClauseIndex(windowIndex)))
+            : List.of();
+    SelectStatement.FetchClause fetch =
+        fetchIndex >= 0
+            ? parseFetch(tokensBetween(fetchIndex, nextClauseIndex(fetchIndex)))
+            : new SelectStatement.FetchClause("", new UnknownExpression(""));
     return new SelectStatement(
-        sql, selectItems, from, where, groupBy, having, orderBy, limit, offset, joins);
+        sql,
+        selectItems,
+        from,
+        where,
+        groupBy,
+        having,
+        orderBy,
+        limit,
+        offset,
+        joins,
+        windows,
+        fetch);
   }
 
   private InsertStatement parseInsert() {
@@ -283,6 +304,40 @@ public final class SqlStatementParser {
     return List.copyOf(joins);
   }
 
+  private List<SelectStatement.WindowItem> parseWindows(String raw) {
+    return parseCommaSeparated(raw).stream()
+        .map(String::strip)
+        .filter(value -> !value.isEmpty())
+        .map(this::parseWindow)
+        .toList();
+  }
+
+  private SelectStatement.WindowItem parseWindow(String raw) {
+    int asIndex = raw.toUpperCase(java.util.Locale.ROOT).indexOf(" AS ");
+    if (asIndex < 0) {
+      return new SelectStatement.WindowItem(raw, "");
+    }
+    String name = raw.substring(0, asIndex).strip();
+    String spec = raw.substring(asIndex + 4).strip();
+    if (spec.startsWith("(") && spec.endsWith(")")) {
+      spec = spec.substring(1, spec.length() - 1).strip();
+    }
+    return new SelectStatement.WindowItem(name, spec);
+  }
+
+  private SelectStatement.FetchClause parseFetch(String raw) {
+    List<Token> fetchTokens = new SqlTokenizer(raw).tokenize();
+    Expression count = new UnknownExpression("");
+    for (int i = 0; i < fetchTokens.size(); i++) {
+      Token token = fetchTokens.get(i);
+      if (token.type() == TokenType.NUMBER || token.type() == TokenType.PLACEHOLDER) {
+        count = new SqlExpressionParser(token.text()).parse();
+        break;
+      }
+    }
+    return new SelectStatement.FetchClause(raw.strip().toUpperCase(java.util.Locale.ROOT), count);
+  }
+
   private SelectStatement.JoinItem parseJoin(int start, int end) {
     int joinKeyword = joinKeywordIndex(start, end);
     int onIndex = topLevelKeyword("ON", joinKeyword + 1);
@@ -412,6 +467,8 @@ public final class SqlStatementParser {
             topLevelKeywordPair("ORDER", "BY", currentClauseIndex + 1),
             topLevelKeyword("LIMIT", currentClauseIndex + 1),
             topLevelKeyword("OFFSET", currentClauseIndex + 1),
+            topLevelKeyword("WINDOW", currentClauseIndex + 1),
+            topLevelKeyword("FETCH", currentClauseIndex + 1),
             eofIndex())
         .stream()
         .filter(index -> index > currentClauseIndex)

@@ -41,6 +41,7 @@ public final class SqlTokenizer {
           "ARRAY",
           "ROW",
           "OVER",
+          "WINDOW",
           "PARTITION",
           "GROUP",
           "HAVING",
@@ -60,6 +61,11 @@ public final class SqlTokenizer {
           "ON",
           "USING",
           "RETURNING",
+          "FETCH",
+          "FIRST",
+          "NEXT",
+          "ROWS",
+          "ONLY",
           "JSON");
 
   private final String sql;

@@ -96,6 +96,24 @@ final class SqlStatementParserTest {
   }
 
   @Test
+  void parsesSelectWindowAndFetch() {
+    SelectStatement statement =
+        (SelectStatement)
+            parse(
+                "select tenant_id, row_number() over w from users "
+                    + "window w as (partition by tenant_id order by created_at) "
+                    + "fetch first 10 rows only");
+
+    assertEquals("users", statement.from());
+    assertEquals(1, statement.windows().size());
+    assertEquals("w", statement.windows().getFirst().name());
+    assertEquals(
+        "partition by tenant_id order by created_at", statement.windows().getFirst().spec());
+    assertEquals("FETCH FIRST 10 ROWS ONLY", statement.fetch().raw());
+    assertEquals("10", ((LiteralExpression) statement.fetch().count()).value());
+  }
+
+  @Test
   void parsesInsertColumnsAndValues() {
     InsertStatement statement =
         (InsertStatement) parse("insert into users (id, name) values (#{id}, #{name})");
