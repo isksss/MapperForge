@@ -1,0 +1,22 @@
+<mapper namespace="sample.UserMapper">
+    <resultMap id="userMap" type="User">
+        <constructor>
+            <idArg column="id" javaType="long"></idArg>
+            <arg column="name" javaType="string"></arg>
+        </constructor>
+        <id property="id" column="id"></id>
+        <result property="name" column="name"></result>
+        <association property="profile" javaType="Profile">
+            <id property="id" column="profile_id"></id>
+            <result property="displayName" column="display_name"></result>
+        </association>
+        <collection property="orders" ofType="Order">
+            <id property="id" column="order_id"></id>
+            <result property="total" column="order_total"></result>
+        </collection>
+        <discriminator javaType="string" column="kind">
+            <case value="ADMIN" resultMap="adminUserMap"></case>
+            <case value="GUEST" resultType="GuestUser"></case>
+        </discriminator>
+    </resultMap>
+</mapper>
