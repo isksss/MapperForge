@@ -1,0 +1,16 @@
+<mapper namespace="sample.UserMapper">
+    <select id="search" resultType="User">
+        SELECT
+            id
+        FROM users
+        <where>
+            <if test="name != null &amp;&amp; name != 'A>B and C' &amp;&amp; status in {'ACTIVE','NEW'}">
+                AND name = #{name}
+            </if>
+            <if
+                test="not user.disabled &amp;&amp; user.profile.name != null &amp;&amp; helper.allowed(user.id) || user instanceof AdminUser">
+                AND privileged = true
+            </if>
+        </where>
+    </select>
+</mapper>
