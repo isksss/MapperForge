@@ -42,6 +42,7 @@ final class FormatterRulePipelineTest {
             FormatterConfig.defaults().maxLineLength(),
             FormatterConfig.defaults().lineEnding(),
             FormatterConfig.defaults().sqlFormatStyle(),
+            FormatterConfig.defaults().sqlPrinter(),
             FormatterConfig.defaults().tagWrapStyle(),
             FormatterConfig.defaults().attributeLayout(),
             FormatterConfig.defaults().preserveWhitespace(),

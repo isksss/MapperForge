@@ -24,6 +24,8 @@ public abstract class MapperForgeExtension {
 
   public abstract Property<String> getSqlFormatStyle();
 
+  public abstract Property<String> getSqlPrinter();
+
   public abstract Property<String> getTagWrapStyle();
 
   public abstract Property<String> getAttributeLayout();

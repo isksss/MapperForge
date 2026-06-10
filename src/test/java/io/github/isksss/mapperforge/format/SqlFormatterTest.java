@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.github.isksss.mapperforge.config.FormatterConfig;
 import io.github.isksss.mapperforge.config.SqlFormatStyle;
+import io.github.isksss.mapperforge.config.SqlPrinter;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
@@ -27,7 +28,7 @@ final class SqlFormatterTest {
         WHERE o.total > 0
         ORDER BY u.id DESC
         LIMIT 10""",
-        formatter.format(sql, config(SqlFormatStyle.MULTI_LINE)));
+        formatter.format(sql, config(SqlFormatStyle.MULTI_LINE, SqlPrinter.AST)));
   }
 
   @Test
@@ -35,10 +36,11 @@ final class SqlFormatterTest {
     assertEquals(
         "SELECT id FROM users WHERE active = 1",
         formatter.format(
-            "select id from users where active = 1", config(SqlFormatStyle.SINGLE_LINE)));
+            "select id from users where active = 1",
+            config(SqlFormatStyle.SINGLE_LINE, SqlPrinter.AST)));
   }
 
-  private static FormatterConfig config(SqlFormatStyle style) {
+  private static FormatterConfig config(SqlFormatStyle style, SqlPrinter printer) {
     FormatterConfig defaults = FormatterConfig.defaults();
     return new FormatterConfig(
         defaults.dialect(),
@@ -49,6 +51,7 @@ final class SqlFormatterTest {
         defaults.maxLineLength(),
         defaults.lineEnding(),
         style,
+        printer,
         defaults.tagWrapStyle(),
         defaults.attributeLayout(),
         defaults.preserveWhitespace(),

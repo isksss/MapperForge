@@ -51,6 +51,7 @@ public final class ConfigLoader {
         intValue(yaml.get("maxLineLength"), base.maxLineLength()),
         lineEnding(yaml.get("lineEnding"), base.lineEnding()),
         enumValue(SqlFormatStyle.class, yaml.get("sqlFormatStyle"), base.sqlFormatStyle()),
+        enumValue(SqlPrinter.class, yaml.get("sqlPrinter"), base.sqlPrinter()),
         enumValue(TagWrapStyle.class, yaml.get("tagWrapStyle"), base.tagWrapStyle()),
         enumValue(AttributeLayout.class, yaml.get("attributeLayout"), base.attributeLayout()),
         booleanValue(yaml.get("preserveWhitespace"), base.preserveWhitespace()),

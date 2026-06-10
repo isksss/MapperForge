@@ -3,6 +3,7 @@ package io.github.isksss.mapperforge.format;
 import io.github.isksss.mapperforge.ast.sql.UnknownStatement;
 import io.github.isksss.mapperforge.config.FormatterConfig;
 import io.github.isksss.mapperforge.config.SqlFormatStyle;
+import io.github.isksss.mapperforge.config.SqlPrinter;
 import io.github.isksss.mapperforge.parse.sql.SqlStatementParser;
 import io.github.isksss.mapperforge.print.LayoutEngine;
 import io.github.isksss.mapperforge.print.SqlAstPrinter;
@@ -47,9 +48,11 @@ public final class SqlFormatter {
     if (config.sqlFormatStyle() == SqlFormatStyle.SINGLE_LINE) {
       return upper;
     }
-    String astFormatted = formatWithAstPrinter(compact, config);
-    if (!astFormatted.isBlank()) {
-      return astFormatted;
+    if (config.sqlPrinter() == SqlPrinter.AST) {
+      String astFormatted = formatWithAstPrinter(compact, config);
+      if (!astFormatted.isBlank()) {
+        return astFormatted;
+      }
     }
     return formatWithRegex(upper, config);
   }

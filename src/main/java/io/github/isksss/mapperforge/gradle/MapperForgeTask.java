@@ -6,6 +6,7 @@ import io.github.isksss.mapperforge.config.ConfigLoader;
 import io.github.isksss.mapperforge.config.Dialect;
 import io.github.isksss.mapperforge.config.FormatterConfig;
 import io.github.isksss.mapperforge.config.SqlFormatStyle;
+import io.github.isksss.mapperforge.config.SqlPrinter;
 import io.github.isksss.mapperforge.config.TagWrapStyle;
 import io.github.isksss.mapperforge.parse.MapperXmlParser;
 import io.github.isksss.mapperforge.source.SourceFile;
@@ -71,6 +72,9 @@ public abstract class MapperForgeTask extends DefaultTask {
   public abstract Property<String> getSqlFormatStyle();
 
   @Input
+  public abstract Property<String> getSqlPrinter();
+
+  @Input
   public abstract Property<String> getTagWrapStyle();
 
   @Input
@@ -120,6 +124,7 @@ public abstract class MapperForgeTask extends DefaultTask {
     getLineEnding().set(extension.getLineEnding().orElse(yamlConfig.lineEnding()));
     getSqlFormatStyle()
         .set(extension.getSqlFormatStyle().orElse(yamlConfig.sqlFormatStyle().name()));
+    getSqlPrinter().set(extension.getSqlPrinter().orElse(yamlConfig.sqlPrinter().name()));
     getTagWrapStyle().set(extension.getTagWrapStyle().orElse(yamlConfig.tagWrapStyle().name()));
     getAttributeLayout()
         .set(extension.getAttributeLayout().orElse(yamlConfig.attributeLayout().name()));
@@ -198,6 +203,7 @@ public abstract class MapperForgeTask extends DefaultTask {
         getMaxLineLength().get(),
         getLineEnding().get(),
         SqlFormatStyle.valueOf(getSqlFormatStyle().get()),
+        SqlPrinter.valueOf(getSqlPrinter().get()),
         TagWrapStyle.valueOf(getTagWrapStyle().get()),
         AttributeLayout.valueOf(getAttributeLayout().get()),
         getPreserveWhitespace().get(),

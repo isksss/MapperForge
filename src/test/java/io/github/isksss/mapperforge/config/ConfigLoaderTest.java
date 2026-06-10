@@ -24,6 +24,7 @@ final class ConfigLoaderTest {
           - custom/**/*.xml
         indentSize: 2
         sqlFormatStyle: SINGLE_LINE
+        sqlPrinter: AST
         attributeOrder:
           result:
             - property
@@ -37,6 +38,7 @@ final class ConfigLoaderTest {
     assertEquals(List.of("custom/**/*.xml"), loaded.include());
     assertEquals(2, loaded.indentSize());
     assertEquals(SqlFormatStyle.SINGLE_LINE, loaded.sqlFormatStyle());
+    assertEquals(SqlPrinter.AST, loaded.sqlPrinter());
     assertEquals(List.of("property", "column"), loaded.attributeOrder().get("result"));
   }
 

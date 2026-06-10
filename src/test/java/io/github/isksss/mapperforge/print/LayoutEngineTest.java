@@ -68,6 +68,7 @@ final class LayoutEngineTest {
         maxLineLength,
         lineEnding,
         defaults.sqlFormatStyle(),
+        defaults.sqlPrinter(),
         defaults.tagWrapStyle(),
         defaults.attributeLayout(),
         defaults.preserveWhitespace(),
