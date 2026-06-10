@@ -113,6 +113,119 @@ final class ValidatorTest {
   }
 
   @Test
+  void rejectsCommentDeletion() {
+    SourceFile before =
+        new SourceFile(
+            "before.xml",
+            """
+            <mapper namespace="sample">
+                <!-- keep a -->
+                <!-- keep b -->
+            </mapper>
+            """);
+    SourceFile after =
+        new SourceFile(
+            "after.xml",
+            """
+            <mapper namespace="sample">
+                <!-- keep a -->
+            </mapper>
+            """);
+
+    ValidationResult result = validator.validate(before, after, FormatterConfig.defaults());
+
+    assertFalse(result.success());
+    assertEquals(ErrorType.COMMENT, result.errors().getFirst().type());
+    assertEquals(3, result.errors().getFirst().location().start().line());
+    assertEquals(5, result.errors().getFirst().location().start().column());
+  }
+
+  @Test
+  void rejectsCommentMove() {
+    SourceFile before =
+        new SourceFile(
+            "before.xml",
+            """
+            <mapper namespace="sample">
+                <!-- keep a -->
+                <!-- keep b -->
+            </mapper>
+            """);
+    SourceFile after =
+        new SourceFile(
+            "after.xml",
+            """
+            <mapper namespace="sample">
+                <!-- keep b -->
+                <!-- keep a -->
+            </mapper>
+            """);
+
+    ValidationResult result = validator.validate(before, after, FormatterConfig.defaults());
+
+    assertFalse(result.success());
+    assertEquals(ErrorType.COMMENT, result.errors().getFirst().type());
+    assertEquals(2, result.errors().getFirst().location().start().line());
+    assertEquals(5, result.errors().getFirst().location().start().column());
+  }
+
+  @Test
+  void rejectsCommentMerge() {
+    SourceFile before =
+        new SourceFile(
+            "before.xml",
+            """
+            <mapper namespace="sample">
+                <!-- keep a -->
+                <!-- keep b -->
+            </mapper>
+            """);
+    SourceFile after =
+        new SourceFile(
+            "after.xml",
+            """
+            <mapper namespace="sample">
+                <!-- keep a keep b -->
+            </mapper>
+            """);
+
+    ValidationResult result = validator.validate(before, after, FormatterConfig.defaults());
+
+    assertFalse(result.success());
+    assertEquals(ErrorType.COMMENT, result.errors().getFirst().type());
+    assertEquals(2, result.errors().getFirst().location().start().line());
+    assertEquals(5, result.errors().getFirst().location().start().column());
+  }
+
+  @Test
+  void rejectsCommentSplit() {
+    SourceFile before =
+        new SourceFile(
+            "before.xml",
+            """
+            <mapper namespace="sample">
+                <!-- keep a keep b -->
+            </mapper>
+            """);
+    SourceFile after =
+        new SourceFile(
+            "after.xml",
+            """
+            <mapper namespace="sample">
+                <!-- keep a -->
+                <!-- keep b -->
+            </mapper>
+            """);
+
+    ValidationResult result = validator.validate(before, after, FormatterConfig.defaults());
+
+    assertFalse(result.success());
+    assertEquals(ErrorType.COMMENT, result.errors().getFirst().type());
+    assertEquals(2, result.errors().getFirst().location().start().line());
+    assertEquals(5, result.errors().getFirst().location().start().column());
+  }
+
+  @Test
   void rejectsSqlCommentChanges() {
     SourceFile before =
         new SourceFile(

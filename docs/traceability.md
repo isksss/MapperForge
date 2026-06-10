@@ -92,6 +92,7 @@ This document maps the main `PLAN.local.md` requirements to implementation and v
 | Tag wrapping | `tag-wrap-always` golden file |
 | CDATA behavior | CDATA golden files, `ValidatorTest`, Gradle functional tests |
 | Comments | `sql-comments` golden file, `ValidatorTest`, AST diff tests |
+| Comment deletion/move/merge/split rejection | `ValidatorTest` |
 
 ## Validation And Diff
 
