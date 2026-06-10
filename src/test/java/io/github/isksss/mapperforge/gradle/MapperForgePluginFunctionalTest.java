@@ -42,10 +42,9 @@ final class MapperForgePluginFunctionalTest {
     writeProject();
     Path mapper = projectDir.resolve("src/main/resources/sample/UserMapper.xml");
     Files.createDirectories(mapper.getParent());
-    Files.writeString(
-        mapper,
-        "<mapper namespace=\"sample.UserMapper\"><select id=\"find\">select id from users</select></mapper>",
-        StandardCharsets.UTF_8);
+    String original =
+        "<mapper namespace=\"sample.UserMapper\"><select id=\"find\">select id from users</select></mapper>";
+    Files.writeString(mapper, original, StandardCharsets.UTF_8);
 
     var result =
         GradleRunner.create()
@@ -56,6 +55,7 @@ final class MapperForgePluginFunctionalTest {
 
     assertEquals(TaskOutcome.FAILED, result.task(":mapperForgeCheck").getOutcome());
     assertTrue(result.getOutput().contains("MapperForge check failed"));
+    assertEquals(original, Files.readString(mapper, StandardCharsets.UTF_8));
   }
 
   @Test
