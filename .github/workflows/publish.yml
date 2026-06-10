@@ -24,4 +24,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          mise exec java@temurin-21 -- ./gradlew spotlessCheck build publish -PreleaseVersion="${VERSION}"
+          mise exec java@temurin-21 -- ./gradlew spotlessCheck build integrationTest publish -PreleaseVersion="${VERSION}"
