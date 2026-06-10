@@ -5,6 +5,9 @@ import org.gradle.api.Project;
 
 /** MapperForge の Gradle plugin エントリポイントです。 */
 public final class MapperForgePlugin implements Plugin<Project> {
+  /** Gradle が plugin instance を生成するための constructor です。 */
+  public MapperForgePlugin() {}
+
   /**
    * MapperForge extension と Gradle タスクを登録します。
    *

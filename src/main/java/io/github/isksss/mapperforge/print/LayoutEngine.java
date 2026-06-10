@@ -2,9 +2,17 @@ package io.github.isksss.mapperforge.print;
 
 import io.github.isksss.mapperforge.config.FormatterConfig;
 
+/** Doc Tree を {@link FormatterConfig} に従って文字列へ描画します。 */
 public final class LayoutEngine {
   private LayoutEngine() {}
 
+  /**
+   * Doc Tree を文字列へ描画します。
+   *
+   * @param doc 描画する Doc Tree
+   * @param config indent 幅、最大行長、改行コードを含む formatter 設定
+   * @return 描画後の文字列
+   */
   public static String render(Doc doc, FormatterConfig config) {
     Renderer renderer =
         new Renderer(config.lineEnding(), Math.max(0, config.indentSize()), config.maxLineLength());

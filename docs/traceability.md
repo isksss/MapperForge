@@ -72,6 +72,7 @@ This document maps the main `PLAN.local.md` requirements to implementation and v
 | Unknown recovery | `UnknownStatement`, `UnknownExpression`, parser tests |
 | SQL formatter styles | `SqlFormatter`, `SqlFormatterTest`, golden files |
 | AST SQL printer | `SqlAstPrinter`, `SqlAstPrinterTest`, golden files |
+| Document model and layout engine | `Doc`, `Docs`, `LayoutEngine`, `DocTreeTest`, `LayoutEngineTest` |
 
 ## OGNL
 
@@ -90,6 +91,7 @@ This document maps the main `PLAN.local.md` requirements to implementation and v
 | Fixed v1 rule pipeline | `FormatterRulePipeline`, `FormatterRulePipelineTest` |
 | Idempotent formatting | `GoldenFileTest.goldenFilesAreIdempotent` |
 | Golden file tests | `src/test/resources/golden/*`, `GoldenFileTest` |
+| Printer Doc Tree | `print/*Doc.java`, `Docs`, `LayoutEngine`, `DocTreeTest`, `LayoutEngineTest` |
 | Dynamic SQL formatting | `dynamic-sql`, `foreach-choose`, `ognl-dynamic-attributes` golden files |
 | Attribute order | `AttributeOrderRule`, `attribute-order` golden file |
 | Attribute layout | `attribute-layout` golden file |
