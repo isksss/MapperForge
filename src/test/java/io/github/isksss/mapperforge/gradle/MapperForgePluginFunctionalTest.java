@@ -177,6 +177,33 @@ final class MapperForgePluginFunctionalTest {
   }
 
   @Test
+  void excludePatternsSkipMatchingMapperXml() throws IOException {
+    writeProject(
+        """
+        mapperForge {
+            exclude = listOf("**/legacy/**")
+        }
+        """);
+    String unformatted =
+        "<mapper namespace=\"sample.UserMapper\"><select id=\"find\">select id from users</select></mapper>";
+    Path activeMapper = projectDir.resolve("src/main/resources/sample/UserMapper.xml");
+    Path legacyMapper = projectDir.resolve("src/main/resources/legacy/LegacyMapper.xml");
+    Files.createDirectories(activeMapper.getParent());
+    Files.createDirectories(legacyMapper.getParent());
+    Files.writeString(activeMapper, unformatted, StandardCharsets.UTF_8);
+    Files.writeString(legacyMapper, unformatted, StandardCharsets.UTF_8);
+
+    GradleRunner.create()
+        .withProjectDir(projectDir.toFile())
+        .withPluginClasspath()
+        .withArguments("mapperForgeFormat")
+        .build();
+
+    assertTrue(Files.readString(activeMapper, StandardCharsets.UTF_8).contains("SELECT"));
+    assertEquals(unformatted, Files.readString(legacyMapper, StandardCharsets.UTF_8));
+  }
+
+  @Test
   void gradleDslRejectsInvalidFormatterVersion() throws IOException {
     writeProject(
         """
