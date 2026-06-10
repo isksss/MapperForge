@@ -33,6 +33,8 @@ import io.github.isksss.mapperforge.parse.MapperXmlParser;
 import io.github.isksss.mapperforge.parse.ognl.OgnlExpressionParser;
 import io.github.isksss.mapperforge.parse.sql.PlaceholderParser;
 import io.github.isksss.mapperforge.parse.sql.SqlStatementParser;
+import io.github.isksss.mapperforge.source.Position;
+import io.github.isksss.mapperforge.source.Range;
 import io.github.isksss.mapperforge.source.SourceFile;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,14 +78,21 @@ public final class Validator {
   }
 
   private void comparePlaceholders(String before, String after, List<ValidationError> errors) {
+    var beforeMatches = findMatches(PLACEHOLDER, before);
+    var afterMatches = findMatches(PLACEHOLDER, after);
     var beforePlaceholders =
-        find(PLACEHOLDER, before).stream().map(placeholderParser::parse).toList();
+        beforeMatches.stream().map(TextMatch::value).map(placeholderParser::parse).toList();
     var afterPlaceholders =
-        find(PLACEHOLDER, after).stream().map(placeholderParser::parse).toList();
+        afterMatches.stream().map(TextMatch::value).map(placeholderParser::parse).toList();
     if (!beforePlaceholders.equals(afterPlaceholders)) {
+      int differingIndex = firstDifferingIndex(beforePlaceholders, afterPlaceholders);
+      Range location =
+          differingIndex >= 0 && differingIndex < beforeMatches.size()
+              ? beforeMatches.get(differingIndex).range()
+              : null;
       errors.add(
           new ValidationError(
-              ErrorType.PLACEHOLDER, "Formatted XML changed placeholder sequence", null));
+              ErrorType.PLACEHOLDER, "Formatted XML changed placeholder sequence", location));
     }
   }
 
@@ -369,4 +378,44 @@ public final class Validator {
     }
     return values;
   }
+
+  private List<TextMatch> findMatches(Pattern pattern, String value) {
+    Matcher matcher = pattern.matcher(value);
+    List<TextMatch> matches = new ArrayList<>();
+    while (matcher.find()) {
+      matches.add(
+          new TextMatch(matcher.group(), sourceRange(value, matcher.start(), matcher.end())));
+    }
+    return matches;
+  }
+
+  private int firstDifferingIndex(List<?> before, List<?> after) {
+    int size = Math.min(before.size(), after.size());
+    for (int index = 0; index < size; index++) {
+      if (!before.get(index).equals(after.get(index))) {
+        return index;
+      }
+    }
+    return before.size() == after.size() ? -1 : size;
+  }
+
+  private Range sourceRange(String source, int startOffset, int endOffset) {
+    return new Range(positionAt(source, startOffset), positionAt(source, endOffset));
+  }
+
+  private Position positionAt(String source, int offset) {
+    int line = 1;
+    int column = 1;
+    for (int index = 0; index < offset && index < source.length(); index++) {
+      if (source.charAt(index) == '\n') {
+        line++;
+        column = 1;
+      } else {
+        column++;
+      }
+    }
+    return new Position(offset, line, column);
+  }
+
+  private record TextMatch(String value, Range range) {}
 }

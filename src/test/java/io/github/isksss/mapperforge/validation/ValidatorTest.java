@@ -216,6 +216,37 @@ final class ValidatorTest {
   }
 
   @Test
+  void reportsPlaceholderChangeLocation() {
+    SourceFile before =
+        new SourceFile(
+            "before.xml",
+            """
+            <mapper namespace="sample">
+                <select id="find">
+                    select id from users where id = #{id,jdbcType=BIGINT}
+                </select>
+            </mapper>
+            """);
+    SourceFile after =
+        new SourceFile(
+            "after.xml",
+            """
+            <mapper namespace="sample">
+                <select id="find">
+                    select id from users where id = #{id,jdbcType=VARCHAR}
+                </select>
+            </mapper>
+            """);
+
+    ValidationResult result = validator.validate(before, after, FormatterConfig.defaults());
+
+    assertFalse(result.success());
+    assertEquals(ErrorType.PLACEHOLDER, result.errors().getFirst().type());
+    assertEquals(3, result.errors().getFirst().location().start().line());
+    assertEquals(41, result.errors().getFirst().location().start().column());
+  }
+
+  @Test
   void acceptsSqlFormattingOnlyChanges() {
     SourceFile before =
         new SourceFile(
